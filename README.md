@@ -52,3 +52,11 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -U pip
 pip install -e ".[dev]"
+```
+
+## Current CLI capability
+
+Generate a baseline REAPER-compatible drum MIDI file:
+
+```bash
+drumgen make-empty --bars 32 --bpm 120 --out drums.mid
