@@ -1,0 +1,67 @@
+# Development Order (Strict)
+
+Follow this order exactly.
+
+Do not skip steps.
+
+---
+
+## Phase 1 — Core foundation
+
+1. Generate REAPER-compatible drum MIDI file
+2. Scaffold project (CLI + structure)
+3. MIDI validation tool
+
+---
+
+## Phase 2 — Non-ML generation (baseline)
+
+4. Generate basic full-song MIDI (no audio)
+5. Prompt parsing (StyleSpec)
+6. Prompt-driven generation (no audio)
+
+---
+
+## Phase 3 — ML integration (core AI)
+
+7. ML model management (GrooVAE install and cache)
+8. Audio → groove adapter
+9. ML inference (GrooVAE generates drums)
+
+---
+
+## Phase 4 — AI behavior
+
+10. Prompt-controlled ML generation
+11. Section support (verse/chorus handling)
+
+---
+
+## Phase 5 — Iteration / editing (advanced AI)
+
+12. ML-based MIDI editing (audio + MIDI + prompt)
+13. Example-based propagation
+
+---
+
+## Phase 6 — Finish
+
+14. Humanization layer
+15. Examples and documentation
+
+---
+
+## Critical Rule
+
+ML features MUST NOT be implemented before:
+
+- MIDI output works
+- CLI works
+- Basic generation works
+
+---
+
+## Architecture Reminder
+
+Final system must be:
+
