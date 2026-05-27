@@ -1,0 +1,1 @@
+"""BeatForge CLI package."""
