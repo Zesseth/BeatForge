@@ -12,6 +12,7 @@ from pathlib import Path
 
 import typer
 
+from beatforge.gen.basic import KNOWN_STYLES, generate_basic_song
 from beatforge.midi.patterns import basic_rock_pattern
 from beatforge.midi.validator import validate_midi_file
 from beatforge.midi.writer import write_drum_midi
@@ -90,9 +91,18 @@ def validate_midi(
 
 
 @app.command("generate-basic")
-def generate_basic() -> None:
+def generate_basic(
+    bars: int = typer.Option(80, "--bars", min=1),
+    bpm: int = typer.Option(120, "--bpm", min=20, max=400),
+    style: str = typer.Option("rock", "--style", help=f"One of {sorted(KNOWN_STYLES)}."),
+    seed: int = typer.Option(42, "--seed"),
+    out: Path = typer.Option(..., "--out"),
+    ppq: int = typer.Option(480, "--ppq", min=24),
+) -> None:
     """Generate a full-song deterministic drum MIDI without prompts (M1.1)."""
-    _stub("generate-basic")
+    events = generate_basic_song(bars=bars, style=style, seed=seed, ppq=ppq)
+    path = write_drum_midi(events, out, bpm=bpm, ppq=ppq)
+    typer.echo(f"wrote {path} ({len(events)} note events)")
 
 
 @app.command("parse-prompt")
