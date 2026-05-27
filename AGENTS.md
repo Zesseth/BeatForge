@@ -30,7 +30,7 @@ The architecture is intentionally **rules-first, ML-as-a-pluggable-enhancement**
 4. **Determinism levels are per milestone**, not "always byte-identical":
    - **M0–M3** (rules-based) — **byte-identical** outputs for the same inputs + same `--seed`.
    - **M4–M5** (ML-backed) — **structurally equivalent** outputs (note-count per bar ± 5%, same section structure, same overall density profile). Byte-identical outputs across CPU/GPU/CUDA versions are **not** promised.
-5. **Apache-2.0 licensing flows downstream.** Do not introduce a dependency, model checkpoint, or dataset that ships under a license incompatible with Apache-2.0 (e.g. non-commercial, research-only, custom EULA, GPL/AGPL for code you'd link into the library, anything with field-of-use restrictions). When in doubt, comment on the issue and wait for human review.
+5. **AGPL-3.0-or-later licensing flows downstream.** BeatForge is strong copyleft. Do not introduce a dependency, model checkpoint, or dataset that ships under a license incompatible with AGPL-3.0-or-later — that means no non-commercial, research-only, custom EULA, or field-of-use-restricted assets, and no Apache-2.0 *code* that contains incompatible patent terms in edge cases (vanilla Apache-2.0 IS one-way compatible into AGPL-3.0, so most permissive deps are fine). When in doubt, comment on the issue and wait for human review.
 6. **No secrets in commits. No AI-authorship trailers in commit messages.** The human merging the PR is the author. `Co-authored-by: Copilot` and similar are banned.
 
 ---
@@ -215,7 +215,7 @@ Before flipping the visibility switch from private to public, verify:
 
 - [ ] No secrets or `.env` files in history (`git log --all -p | rg -i 'token|secret|password|api[_-]?key'` returns clean).
 - [ ] No user audio fixtures committed.
-- [ ] All third-party model checkpoints in `MODEL_SOURCES.md` are license-compatible with Apache-2.0.
+- [ ] All third-party model checkpoints in `MODEL_SOURCES.md` are license-compatible with AGPL-3.0-or-later.
 - [ ] `PRIVACY.md` and the no-audio-egress harness are in CI and green.
 - [ ] `CONTRIBUTING.md`, `AGENTS.md`, `CODE_OF_CONDUCT.md` (TBD), and an issue template (TBD) are in place.
 - [ ] CI is green on `main` and on the last 5 PRs.
