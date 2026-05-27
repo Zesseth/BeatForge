@@ -16,6 +16,7 @@ from beatforge.gen.basic import KNOWN_STYLES, generate_basic_song
 from beatforge.midi.patterns import basic_rock_pattern
 from beatforge.midi.validator import validate_midi_file
 from beatforge.midi.writer import write_drum_midi
+from beatforge.prompt.parser import parse_prompt as _parse_prompt
 
 app = typer.Typer(
     name="drumgen",
@@ -106,9 +107,25 @@ def generate_basic(
 
 
 @app.command("parse-prompt")
-def parse_prompt() -> None:
+def parse_prompt(
+    prompt: str = typer.Option(..., "--prompt"),
+    out: Path | None = typer.Option(None, "--out", help="Write JSON to this path."),
+    verbose: bool = typer.Option(False, "--verbose", "-v"),
+) -> None:
     """Parse a natural-language prompt into a StyleSpec (M1.2)."""
-    _stub("parse-prompt")
+    import json as _json
+
+    spec, unparsed = _parse_prompt(prompt, return_unparsed=True)
+    payload: dict[str, object] = {"stylespec": spec.model_dump()}
+    if verbose:
+        payload["unparsed"] = unparsed
+    text = _json.dumps(payload, indent=2, sort_keys=True) + "\n"
+    if out is not None:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        typer.echo(f"wrote {out}")
+    else:
+        typer.echo(text, nl=False)
 
 
 @app.command("generate")
