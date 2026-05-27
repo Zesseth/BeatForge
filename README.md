@@ -1,54 +1,73 @@
 # BeatForge
-Ai based MIDI drum generator
-# BeatForge (working title) — Audio-driven Drum MIDI Generator for Linux
 
-**BeatForge** is a Debian-first CLI tool that generates a **full-song drum arrangement as MIDI** from an input audio file (e.g., bass or guitar), guided by **prompt-style instructions** and iterative edits.  
-Output is always a **Reaper-ready .mid** (GM drum map, channel 10), so you can import it into REAPER and route it to any drum sampler / drum machine you like.
+**Privacy-first, Debian-first CLI that generates editable drum MIDI for REAPER from local audio and/or text prompts.**
 
-> Status: early development (private repo). Public release later.
+> Status: pre-alpha. Repository is currently a clean slate after architectural restructure (2026-05-27). See [`ROADMAP.md`](ROADMAP.md) and the GitHub Issues backlog.
 
 ---
 
-## Why / Goals
+## What BeatForge is
 
-- **Generate drum MIDI from audio**: analyze tempo/beat grid and propose a complete song structure (intro/verse/chorus/bridge/outro).
-- **Prompt-driven control**: “punk 180bpm, eighth hats, snare on 2&4, fills before chorus” → drum arrangement follows the prompt.
-- **Iterative editing**: import an existing drum MIDI, apply prompt-based transforms, and export a new MIDI.
-- **Example-based editing** (planned): hand-edit one bar in REAPER and propagate that “feel” to similar sections.
+- A **command-line tool** that produces **REAPER-importable drum MIDI** (`.mid`, GM drum map, channel 10).
+- Optionally takes **a local audio file** (bass, guitar, or rough mix) and/or **a text prompt** describing the desired feel.
+- Always outputs editable MIDI — never rendered audio. You bring the drum sampler/plugin.
+- Designed to run **fully locally on Debian Linux**. Audio is processed on your machine and **never uploaded anywhere**.
 
----
+## What BeatForge is not
 
-## Non-goals (v1)
-
-- No audio rendering of drums; **MIDI only**.
-- No REAPER plugin; integration is via **MIDI import/export**.
-- No cloud dependency required; must run locally on Debian.
+- Not a renderer. No audio output, no drum sample bundling.
+- Not a REAPER plugin. Integration is via standard MIDI import/export.
+- Not a cloud service. The only network use is optional model-weight downloads (see [`MODEL_SOURCES.md`](MODEL_SOURCES.md)) and *optional* symbolic-only assists via external LLM endpoints.
 
 ---
 
-## Key Features (planned)
+## Privacy promise (hard constraint)
 
-### v1 (MVP)
-- `drumgen generate` creates a full-song drum MIDI from audio + prompt.
-- `drumgen edit` modifies an existing drum MIDI based on prompt and section-awareness.
-- Deterministic output when `--seed` is provided.
-- “Reaper-ready” MIDI: GM map + channel 10 + tempo meta events.
+**Raw audio never leaves your machine.** Not as PCM, not as spectrograms, not as MFCCs, not as any reversible representation.
 
-### v2+
-- Section detection improvements (better verse/chorus inference).
-- Example-bar propagation (copy a user-edited bar style across choruses).
-- Groove templates + richer humanization (velocity/microtiming profiles).
+Optional external calls (e.g. GitHub Models for prompt-driven symbolic refinement) are allowed only with:
+
+- text prompts you typed,
+- and/or small, non-reversible derived features (tempo as a float, beat-grid timestamps, bar structure, symbolic MIDI events).
+
+See [`PRIVACY.md`](PRIVACY.md) for the full policy and the `no-audio-egress` test plan.
 
 ---
 
-## Quickstart (developer)
+## Quickstart (planned, will be implemented in M0)
 
-> Target platform: Debian (Python 3.11+).  
-> Installation instructions will be updated as dependencies settle.
+> Target: Debian 12+, Python 3.11+.
 
-### Setup
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -U pip
 pip install -e ".[dev]"
+
+# Baseline: generate a simple REAPER-ready drum MIDI without any audio or prompt
+drumgen make-empty --bars 32 --bpm 120 --out drums.mid
+
+# Validate it
+drumgen validate-midi drums.mid
+```
+
+The full CLI surface (`generate`, `analyze`, `groove`, `edit`, `models install`, …) is implemented incrementally in milestones M1–M5.
+
+---
+
+## Documentation
+
+- [`ROADMAP.md`](ROADMAP.md) — milestones M0–M5 and what each one delivers
+- [`PRIVACY.md`](PRIVACY.md) — privacy policy and no-audio-egress test plan
+- [`MODEL_SOURCES.md`](MODEL_SOURCES.md) — third-party model weights, versions, licenses, checksums
+- [`DATA_SOURCES.md`](DATA_SOURCES.md) — datasets used for any local training, with licenses
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (humans and GitHub Copilot agents)
+- [`AGENTS.md`](AGENTS.md) — instructions for Copilot CLI / Copilot agents working in this repo
+
+---
+
+## License
+
+Apache License 2.0 — see [`LICENSE`](LICENSE).
+
+Apache 2.0 was chosen over AGPL-3.0 because BeatForge is a local CLI tool: AGPL's network-use clause provides no real benefit here, and Apache 2.0 maximizes downstream compatibility with model weights (most Magenta/HuggingFace checkpoints ship under Apache 2.0 or MIT) and lowers contribution friction. The license is intentionally permissive so the tool stays open and reusable forever; it does *not* impose any obligation back on downstream users beyond attribution and the standard patent grant.
