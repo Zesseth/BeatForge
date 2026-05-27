@@ -13,10 +13,12 @@ from pathlib import Path
 import typer
 
 from beatforge.gen.basic import KNOWN_STYLES, generate_basic_song
+from beatforge.gen.styled import generate_from_stylespec
 from beatforge.midi.patterns import basic_rock_pattern
 from beatforge.midi.validator import validate_midi_file
 from beatforge.midi.writer import write_drum_midi
 from beatforge.prompt.parser import parse_prompt as _parse_prompt
+from beatforge.prompt.stylespec import StyleSpec
 
 app = typer.Typer(
     name="drumgen",
@@ -129,9 +131,35 @@ def parse_prompt(
 
 
 @app.command("generate")
-def generate() -> None:
+def generate(
+    prompt: str | None = typer.Option(None, "--prompt"),
+    stylespec: Path | None = typer.Option(None, "--stylespec", help="StyleSpec JSON file."),
+    bars: int = typer.Option(96, "--bars", min=1),
+    bpm: int | None = typer.Option(None, "--bpm", min=20, max=400),
+    seed: int = typer.Option(7, "--seed"),
+    out: Path = typer.Option(..., "--out"),
+    ppq: int = typer.Option(480, "--ppq", min=24),
+) -> None:
     """Generate drum MIDI from a StyleSpec or prompt (M1.3)."""
-    _stub("generate")
+    import json as _json
+
+    if (prompt is None) == (stylespec is None):
+        raise typer.BadParameter("provide exactly one of --prompt or --stylespec")
+
+    if prompt is not None:
+        spec = _parse_prompt(prompt)
+    else:
+        assert stylespec is not None
+        payload = _json.loads(stylespec.read_text(encoding="utf-8"))
+        # accept either bare spec or {"stylespec": {...}} (what parse-prompt writes)
+        if "stylespec" in payload:
+            payload = payload["stylespec"]
+        spec = StyleSpec(**payload)
+
+    effective_bpm = bpm if bpm is not None else (spec.bpm if spec.bpm is not None else 120)
+    events = generate_from_stylespec(spec, bars=bars, seed=seed, ppq=ppq)
+    path = write_drum_midi(events, out, bpm=effective_bpm, ppq=ppq)
+    typer.echo(f"wrote {path} ({len(events)} note events) bpm={effective_bpm} spec={spec.model_dump()}")
 
 
 @app.command("analyze")
