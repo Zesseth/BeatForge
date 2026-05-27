@@ -13,6 +13,7 @@ from pathlib import Path
 import typer
 
 from beatforge.midi.patterns import basic_rock_pattern
+from beatforge.midi.validator import validate_midi_file
 from beatforge.midi.writer import write_drum_midi
 
 app = typer.Typer(
@@ -62,9 +63,30 @@ def make_empty(
 
 
 @app.command("validate-midi")
-def validate_midi() -> None:
+def validate_midi(
+    path: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    json_output: bool = typer.Option(False, "--json", help="Emit JSON instead of text."),
+    strict: bool = typer.Option(
+        False, "--strict", help="Treat warnings (e.g. missing time signature) as errors."
+    ),
+) -> None:
     """Validate a MIDI file against BeatForge's REAPER-ready ruleset (M0.3)."""
-    _stub("validate-midi")
+    import json as _json
+
+    report = validate_midi_file(path, strict=strict)
+    if json_output:
+        typer.echo(_json.dumps(report.to_dict(), indent=2, sort_keys=True))
+    else:
+        status = "PASS" if report.ok else "FAIL"
+        typer.echo(f"{status}  {report.path}")
+        for err in report.errors:
+            typer.echo(f"  ERROR  {err}")
+        for warn in report.warnings:
+            typer.echo(f"  WARN   {warn}")
+        if report.stats:
+            for k, v in sorted(report.stats.items()):
+                typer.echo(f"  stat   {k}={v}")
+    raise typer.Exit(code=0 if report.ok else 1)
 
 
 @app.command("generate-basic")

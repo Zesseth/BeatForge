@@ -24,7 +24,7 @@ EXPECTED_SUBCOMMANDS = {
 # Subcommands that have already been wired with required options and therefore
 # cannot be invoked with no arguments. They are still expected to appear in
 # ``--help`` (verified by ``test_help_lists_all_expected_subcommands``).
-IMPLEMENTED_SUBCOMMANDS = {"make-empty"}
+IMPLEMENTED_SUBCOMMANDS = {"make-empty", "validate-midi"}
 
 
 def test_help_exits_zero() -> None:
