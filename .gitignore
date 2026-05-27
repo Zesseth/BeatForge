@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# BeatForge local artifacts (CLI outputs); fixtures under tests/ are kept
+*.mid
+!tests/fixtures/**/*.mid
+stylespec.json
+!tests/fixtures/**/stylespec.json
+
