@@ -8,7 +8,12 @@ discoverable from day one.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import typer
+
+from beatforge.midi.patterns import basic_rock_pattern
+from beatforge.midi.writer import write_drum_midi
 
 app = typer.Typer(
     name="drumgen",
@@ -39,9 +44,21 @@ def _root(
 
 
 @app.command("make-empty")
-def make_empty() -> None:
+def make_empty(
+    bars: int = typer.Option(32, "--bars", help="Number of 4/4 bars to generate.", min=1),
+    bpm: int = typer.Option(120, "--bpm", help="Tempo in BPM.", min=20, max=400),
+    out: Path = typer.Option(..., "--out", help="Output .mid path."),
+    ppq: int = typer.Option(480, "--ppq", help="Pulses per quarter note.", min=24),
+    time_signature: str = typer.Option(
+        "4/4", "--time-signature", help="Time signature, e.g. 4/4."
+    ),
+) -> None:
     """Write a REAPER-ready baseline drum MIDI file (M0.2)."""
-    _stub("make-empty")
+    num_str, den_str = time_signature.split("/", 1)
+    ts = (int(num_str), int(den_str))
+    events = basic_rock_pattern(bars=bars, ppq=ppq)
+    path = write_drum_midi(events, out, bpm=bpm, time_signature=ts, ppq=ppq)
+    typer.echo(f"wrote {path}")
 
 
 @app.command("validate-midi")

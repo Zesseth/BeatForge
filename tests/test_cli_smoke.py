@@ -21,6 +21,11 @@ EXPECTED_SUBCOMMANDS = {
     "models",
 }
 
+# Subcommands that have already been wired with required options and therefore
+# cannot be invoked with no arguments. They are still expected to appear in
+# ``--help`` (verified by ``test_help_lists_all_expected_subcommands``).
+IMPLEMENTED_SUBCOMMANDS = {"make-empty"}
+
 
 def test_help_exits_zero() -> None:
     result = runner.invoke(app, ["--help"])
@@ -34,7 +39,7 @@ def test_help_lists_all_expected_subcommands() -> None:
         assert sub in result.output, f"missing subcommand in --help: {sub}"
 
 
-def test_each_subcommand_exits_zero_for_stub() -> None:
-    for sub in EXPECTED_SUBCOMMANDS:
+def test_each_stub_subcommand_exits_zero() -> None:
+    for sub in EXPECTED_SUBCOMMANDS - IMPLEMENTED_SUBCOMMANDS:
         result = runner.invoke(app, [sub])
         assert result.exit_code == 0, f"{sub} exited {result.exit_code}: {result.output}"
