@@ -7,14 +7,15 @@ name = "beatforge"
 version = "0.1.0.dev0"
 description = "Privacy-first, prompt-driven drum MIDI generator for REAPER and other DAWs."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [{ name = "BeatForge contributors" }]
 keywords = ["midi", "drums", "reaper", "audio", "music", "generation"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3.11",

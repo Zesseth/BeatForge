@@ -68,6 +68,6 @@ The full CLI surface (`generate`, `analyze`, `groove`, `edit`, `models install`,
 
 ## License
 
-Apache License 2.0 — see [`LICENSE`](LICENSE).
+GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later) — see [`LICENSE`](LICENSE).
 
-Apache 2.0 was chosen over AGPL-3.0 because BeatForge is a local CLI tool: AGPL's network-use clause provides no real benefit here, and Apache 2.0 maximizes downstream compatibility with model weights (most Magenta/HuggingFace checkpoints ship under Apache 2.0 or MIT) and lowers contribution friction. The license is intentionally permissive so the tool stays open and reusable forever; it does *not* impose any obligation back on downstream users beyond attribution and the standard patent grant.
+AGPL-3.0 is a **strong copyleft** license chosen to keep BeatForge open forever, even if someone runs it as a hosted service. Anyone who modifies and **distributes** BeatForge — or makes a modified version available over a network — must release their source code under the same license. Permissive forks that close the source are not permitted. Model weights and datasets are tracked separately in [`MODEL_SOURCES.md`](MODEL_SOURCES.md) and [`DATA_SOURCES.md`](DATA_SOURCES.md); their licenses must be AGPL-compatible (Apache-2.0, MIT, BSD, CC-BY, and most open weights qualify).

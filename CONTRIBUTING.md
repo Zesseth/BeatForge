@@ -5,7 +5,7 @@ Thanks for your interest! BeatForge is built to be approachable both for human c
 ## Ground rules
 
 1. **Privacy first.** Read [`PRIVACY.md`](PRIVACY.md). Any change that touches audio I/O, network code, or the no-audio-egress harness needs an explicit review against the privacy policy.
-2. **License is Apache-2.0.** By submitting a contribution, you agree to license it under Apache-2.0 (see [`LICENSE`](LICENSE)).
+2. **License is AGPL-3.0-or-later.** By submitting a contribution, you agree to license it under AGPL-3.0-or-later (see [`LICENSE`](LICENSE)). This is a strong copyleft license: forks and derived works — including network-deployed services — must release their source under the same license. The goal is to keep BeatForge open forever.
 3. **Issues drive work.** Every PR should reference an open issue. The issue defines the scope, files to touch, validation steps, and network policy.
 4. **REAPER-ready, always.** Any change that produces a `.mid` artifact must keep it REAPER-importable: GM drum notes, channel 10, tempo + time-signature meta events present.
 5. **Deterministic by default.** Rules-based code paths must be byte-stable for the same inputs + same `--seed`. ML code paths must be structurally stable (see `ROADMAP.md` § Determinism policy).
