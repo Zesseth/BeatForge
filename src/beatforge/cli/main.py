@@ -54,9 +54,7 @@ def make_empty(
     bpm: int = typer.Option(120, "--bpm", help="Tempo in BPM.", min=20, max=400),
     out: Path = typer.Option(..., "--out", help="Output .mid path."),
     ppq: int = typer.Option(480, "--ppq", help="Pulses per quarter note.", min=24),
-    time_signature: str = typer.Option(
-        "4/4", "--time-signature", help="Time signature, e.g. 4/4."
-    ),
+    time_signature: str = typer.Option("4/4", "--time-signature", help="Time signature, e.g. 4/4."),
 ) -> None:
     """Write a REAPER-ready baseline drum MIDI file (M0.2)."""
     num_str, den_str = time_signature.split("/", 1)
@@ -159,7 +157,9 @@ def generate(
     effective_bpm = bpm if bpm is not None else (spec.bpm if spec.bpm is not None else 120)
     events = generate_from_stylespec(spec, bars=bars, seed=seed, ppq=ppq)
     path = write_drum_midi(events, out, bpm=effective_bpm, ppq=ppq)
-    typer.echo(f"wrote {path} ({len(events)} note events) bpm={effective_bpm} spec={spec.model_dump()}")
+    typer.echo(
+        f"wrote {path} ({len(events)} note events) bpm={effective_bpm} spec={spec.model_dump()}"
+    )
 
 
 @app.command("analyze")

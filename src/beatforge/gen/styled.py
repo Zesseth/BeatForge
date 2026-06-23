@@ -12,7 +12,9 @@ from collections.abc import Iterable
 
 from ..midi import (
     GM_CLOSED_HAT,
+    GM_CRASH,
     GM_KICK,
+    GM_RIDE,
     GM_SNARE,
     GM_TOM_HI,
     GM_TOM_LO,
@@ -109,41 +111,52 @@ def _generate_section(
             beat_start = bar_start + beat * ppq
 
             if beat in kick_beats:
-                events.append(DrumEvent(beat_start, GM_KICK, velocity=108))
+                base_vel = 108
+                vel = max(1, min(127, base_vel + rng.randint(-5, 5)))
+                events.append(DrumEvent(beat_start, GM_KICK, velocity=vel))
 
             if beat in snare_beats:
-                vel = 115 if section.name == "chorus" else 105
+                base_vel = 115 if section.name == "chorus" else 105
+                vel = max(1, min(127, base_vel + rng.randint(-5, 5)))
                 events.append(DrumEvent(beat_start, GM_SNARE, velocity=vel))
                 if spec.ghost_notes:
                     ghost_offset = ppq // 2  # halfway to the next beat
+                    ghost_vel = max(1, min(127, 45 + rng.randint(-2, 2)))
                     events.append(
-                        DrumEvent(beat_start + ghost_offset, GM_SNARE, velocity=45)
+                        DrumEvent(beat_start + ghost_offset, GM_SNARE, velocity=ghost_vel)
                     )
 
             for h in range(hats_per_beat):
-                events.append(
-                    DrumEvent(beat_start + h * hat_tick, GM_CLOSED_HAT, velocity=80)
-                )
+                hat_vel = max(1, min(127, 80 + rng.randint(-3, 3)))
+                events.append(DrumEvent(beat_start + h * hat_tick, GM_CLOSED_HAT, velocity=hat_vel))
+
+            # Ride cymbal: on beat 0 in verse/chorus, more frequent in chorus
+            if section.name in ("verse", "chorus") and (
+                beat == 0 or (section.name == "chorus" and beat % 2 == 0)
+            ):
+                ride_vel = max(1, min(127, 90 + rng.randint(-5, 5)))
+                events.append(DrumEvent(beat_start, GM_RIDE, velocity=ride_vel))
 
         if is_fill_bar:
-            # Replace the last beat hats with a 4-note tom fill.
+            # Fill pattern: crash + toms
             beat_start = bar_start + 3 * ppq
             sixteenth = ppq // 4
+
+            # Add crash cymbal on the first beat of the fill
+            crash_vel = max(1, min(127, 110 + rng.randint(-5, 5)))
+            events.append(DrumEvent(beat_start, GM_CRASH, velocity=crash_vel))
+
+            # Tom fill pattern
             tom_sequence = [GM_TOM_HI, GM_TOM_MID, GM_TOM_LO, GM_TOM_LO]
             base_v = 100 + rng.randint(-5, 5)
             # remove any hats we already queued on this beat to keep the fill clean
             events = [
                 ev
                 for ev in events
-                if not (
-                    ev.note == GM_CLOSED_HAT
-                    and beat_start <= ev.start_tick < beat_start + ppq
-                )
+                if not (ev.note == GM_CLOSED_HAT and beat_start <= ev.start_tick < beat_start + ppq)
             ]
             for i, drum in enumerate(tom_sequence):
-                events.append(
-                    DrumEvent(beat_start + i * sixteenth, drum, velocity=base_v)
-                )
+                events.append(DrumEvent(beat_start + i * sixteenth, drum, velocity=base_v))
 
     return events
 

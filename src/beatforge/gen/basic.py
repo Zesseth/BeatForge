@@ -11,7 +11,9 @@ import random
 
 from ..midi import (
     GM_CLOSED_HAT,
+    GM_CRASH,
     GM_KICK,
+    GM_RIDE,
     GM_SNARE,
     GM_TOM_HI,
     GM_TOM_LO,
@@ -78,30 +80,42 @@ def _generate_section(
             beat_start = bar_start + beat * ppq
 
             if _kick_pattern(style, section.name, beat):
-                vel = 110 if section.name == "chorus" else 100
+                base_vel = 110 if section.name == "chorus" else 100
+                vel = max(1, min(127, base_vel + rng.randint(-5, 5)))
                 events.append(DrumEvent(beat_start, GM_KICK, velocity=vel))
 
             if beat in (1, 3):
-                vel = 115 if section.name == "chorus" else 105
+                base_vel = 115 if section.name == "chorus" else 105
+                vel = max(1, min(127, base_vel + rng.randint(-5, 5)))
                 events.append(DrumEvent(beat_start, GM_SNARE, velocity=vel))
 
             for h in range(hats_per_beat):
-                events.append(
-                    DrumEvent(beat_start + h * hat_tick, GM_CLOSED_HAT, velocity=80)
-                )
+                hat_vel = max(1, min(127, 80 + rng.randint(-3, 3)))
+                events.append(DrumEvent(beat_start + h * hat_tick, GM_CLOSED_HAT, velocity=hat_vel))
 
-        # Trivial 4-tom fill on the last beat of the last bar of verse/chorus.
+            # Ride cymbal: on beat 0 in verse/chorus, more frequent in chorus
+            if section.name in ("verse", "chorus") and (
+                beat == 0 or (section.name == "chorus" and beat % 2 == 0)
+            ):
+                ride_vel = max(1, min(127, 90 + rng.randint(-5, 5)))
+                events.append(DrumEvent(beat_start, GM_RIDE, velocity=ride_vel))
+
+        # Fill on the last beat of the last bar of verse/chorus.
         if is_fill_bar:
             beat_start = bar_start + 3 * ppq
             sixteenth = ppq // 4
+
+            # Add crash cymbal on the first beat of the fill
+            crash_vel = max(1, min(127, 110 + rng.randint(-5, 5)))
+            events.append(DrumEvent(bar_start + 3 * ppq, GM_CRASH, velocity=crash_vel))
+
+            # Tom fill pattern
             tom_sequence = [GM_TOM_HI, GM_TOM_MID, GM_TOM_LO, GM_TOM_LO]
             # Use rng to choose a per-fill velocity dither; keeps deterministic
             # output stable but exercises the rng so seed actually matters.
             base_v = 100 + rng.randint(-5, 5)
             for i, drum in enumerate(tom_sequence):
-                events.append(
-                    DrumEvent(beat_start + i * sixteenth, drum, velocity=base_v)
-                )
+                events.append(DrumEvent(beat_start + i * sixteenth, drum, velocity=base_v))
 
     return events
 
@@ -115,9 +129,7 @@ def generate_basic_song(
 ) -> list[DrumEvent]:
     """Produce a deterministic list of drum events for the given song."""
     if style not in KNOWN_STYLES:
-        raise ValueError(
-            f"unknown style {style!r}; known: {sorted(KNOWN_STYLES)}"
-        )
+        raise ValueError(f"unknown style {style!r}; known: {sorted(KNOWN_STYLES)}")
     rng = random.Random(seed)
     sections = structure_for(bars)
     events: list[DrumEvent] = []

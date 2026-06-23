@@ -17,9 +17,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "broken"
 
 def test_known_good_passes(tmp_path: Path) -> None:
     out = tmp_path / "good.mid"
-    result = runner.invoke(
-        app, ["make-empty", "--bars", "8", "--bpm", "120", "--out", str(out)]
-    )
+    result = runner.invoke(app, ["make-empty", "--bars", "8", "--bpm", "120", "--out", str(out)])
     assert result.exit_code == 0, result.output
 
     report = validate_midi_file(out)

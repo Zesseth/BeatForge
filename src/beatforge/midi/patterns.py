@@ -32,7 +32,5 @@ def basic_rock_pattern(bars: int, ppq: int) -> list[DrumEvent]:
             if beat in (1, 3):
                 events.append(DrumEvent(beat_start, GM_SNARE, velocity=105))
             for h in range(hats_per_beat):
-                events.append(
-                    DrumEvent(beat_start + h * eighth, GM_CLOSED_HAT, velocity=80)
-                )
+                events.append(DrumEvent(beat_start + h * eighth, GM_CLOSED_HAT, velocity=80))
     return events
