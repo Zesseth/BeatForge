@@ -70,7 +70,7 @@ def _scan_file(path: Path) -> list[str]:
         if AUDIO_RE.search(body) and NETWORK_RE.search(body):
             if EXEMPT_MARKER in body:
                 continue
-            line_no = text[: start].count("\n") + 1
+            line_no = text[:start].count("\n") + 1
             violations.append(
                 f"{path}:{line_no}: function body references both audio loading "
                 "and a network-egress symbol (privacy violation). "

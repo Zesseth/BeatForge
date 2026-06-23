@@ -38,7 +38,10 @@ _BACKBEAT_PATTERNS: list[tuple[re.Pattern[str], Backbeat]] = [
 ]
 
 _KICK_DENSITY: list[tuple[re.Pattern[str], Density]] = [
-    (re.compile(r"\bmore\s+kick(s|ing)?\b|\bdouble\s+kick\b|\bheavy\s+kick\b", re.IGNORECASE), "more"),
+    (
+        re.compile(r"\bmore\s+kick(s|ing)?\b|\bdouble\s+kick\b|\bheavy\s+kick\b", re.IGNORECASE),
+        "more",
+    ),
     (re.compile(r"\bless\s+kick(s|ing)?\b|\bsparse\s+kick\b", re.IGNORECASE), "less"),
 ]
 
@@ -124,13 +127,9 @@ def _build_stylespec(text: str) -> StyleSpec:
 @overload
 def parse_prompt(prompt: str) -> StyleSpec: ...
 @overload
-def parse_prompt(
-    prompt: str, *, return_unparsed: Literal[False]
-) -> StyleSpec: ...
+def parse_prompt(prompt: str, *, return_unparsed: Literal[False]) -> StyleSpec: ...
 @overload
-def parse_prompt(
-    prompt: str, *, return_unparsed: Literal[True]
-) -> tuple[StyleSpec, list[str]]: ...
+def parse_prompt(prompt: str, *, return_unparsed: Literal[True]) -> tuple[StyleSpec, list[str]]: ...
 
 
 def parse_prompt(

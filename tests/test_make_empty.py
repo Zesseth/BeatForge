@@ -36,9 +36,7 @@ def test_make_empty_default(tmp_path: Path) -> None:
     assert tempo is not None and mido.tempo2bpm(tempo.tempo) == 120
     assert ts is not None and (ts.numerator, ts.denominator) == (4, 4)
 
-    notes_on = [
-        m for track in mid.tracks for m in track if m.type == "note_on" and m.velocity > 0
-    ]
+    notes_on = [m for track in mid.tracks for m in track if m.type == "note_on" and m.velocity > 0]
     assert notes_on, "no note_on events"
     assert all(m.channel == DRUM_CHANNEL for m in notes_on), "notes off drum channel"
 

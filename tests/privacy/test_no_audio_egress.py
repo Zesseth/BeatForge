@@ -31,9 +31,7 @@ def test_allowlist_is_empty_in_m0() -> None:
 
 def test_make_empty_opens_no_socket(tmp_path: Path) -> None:
     out = tmp_path / "drums.mid"
-    result = runner.invoke(
-        app, ["make-empty", "--bars", "4", "--bpm", "120", "--out", str(out)]
-    )
+    result = runner.invoke(app, ["make-empty", "--bars", "4", "--bpm", "120", "--out", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
 
@@ -50,9 +48,7 @@ def test_help_opens_no_socket() -> None:
     assert result.exit_code == 0
 
 
-def test_recorder_sees_no_traffic_from_cli(
-    tmp_path: Path, recorded_socket: list[bytes]
-) -> None:
+def test_recorder_sees_no_traffic_from_cli(tmp_path: Path, recorded_socket: list[bytes]) -> None:
     """Even with the recorder enabled (sockets *would* succeed if used),
     the CLI must not emit any bytes."""
     out = tmp_path / "drums.mid"

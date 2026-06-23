@@ -24,8 +24,12 @@ def _no_tempo() -> mido.MidiFile:
     # time signature only; no set_tempo
     track.append(
         mido.MetaMessage(
-            "time_signature", numerator=4, denominator=4, clocks_per_click=24,
-            notated_32nd_notes_per_beat=8, time=0,
+            "time_signature",
+            numerator=4,
+            denominator=4,
+            clocks_per_click=24,
+            notated_32nd_notes_per_beat=8,
+            time=0,
         )
     )
     track.append(mido.Message("note_on", channel=9, note=36, velocity=100, time=0))
@@ -40,8 +44,12 @@ def _wrong_channel() -> mido.MidiFile:
     mid.tracks.append(track)
     track.append(
         mido.MetaMessage(
-            "time_signature", numerator=4, denominator=4, clocks_per_click=24,
-            notated_32nd_notes_per_beat=8, time=0,
+            "time_signature",
+            numerator=4,
+            denominator=4,
+            clocks_per_click=24,
+            notated_32nd_notes_per_beat=8,
+            time=0,
         )
     )
     track.append(mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(120), time=0))
@@ -58,8 +66,12 @@ def _empty_notes() -> mido.MidiFile:
     mid.tracks.append(track)
     track.append(
         mido.MetaMessage(
-            "time_signature", numerator=4, denominator=4, clocks_per_click=24,
-            notated_32nd_notes_per_beat=8, time=0,
+            "time_signature",
+            numerator=4,
+            denominator=4,
+            clocks_per_click=24,
+            notated_32nd_notes_per_beat=8,
+            time=0,
         )
     )
     track.append(mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(120), time=0))
