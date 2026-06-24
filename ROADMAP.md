@@ -71,7 +71,7 @@ A *pluggable* ML backend that produces expressive symbolic drum performances fro
 - M5.2 Prompt-controlled ML generation — prompt drives both model sampling parameters and post-processing
 - M5.3 Hybrid iterative editing — preserve protected bar ranges, regenerate selected sections
 - M5.4 Examples folder + REAPER import walkthrough
-- M5.5 *Optional* GitHub Models / Copilot assist for symbolic-only MIDI refinement (text-prompt + symbolic-MIDI in, modified symbolic-MIDI out — **no audio in the payload, ever**)
+- M5.5 *Optional* Symbolic LLM refinement using Mistral models (text-prompt + symbolic-MIDI in, modified symbolic-MIDI out — **no audio in the payload, ever**). Priority order: 1) Mistral Pro subscription, 2) Mistral Cloud API, 3) Local Mistral model (see `MODEL_SOURCES.md` for local model recommendations)
 
 **Exit criteria for M5:** end-to-end demo on a real song stem produces drum MIDI that the developer (Jesse) finds musically usable in REAPER without further hand-editing of more than ~20% of the bars.
 

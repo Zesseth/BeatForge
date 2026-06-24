@@ -31,6 +31,26 @@ Every entry follows this template:
 
 > **None yet.** No model weights are bundled or downloaded in M0–M3. The first entries will be added in M4 (`drumgen models install`).
 
+## LLM Model Priority for Symbolic Refinement (M5.5)
+
+For the optional symbolic LLM refinement feature, the following priority order applies:
+
+1. **Mistral Pro Subscription** ( Preferred ) - Mistral's hosted Pro model via subscription
+   - Access: Requires Mistral Pro API key
+   - Network: `symbolic-llm-allowed` (opt-in via `--use-mistral-pro` flag)
+   - License: Commercial use according to Mistral terms
+   
+2. **Mistral Cloud API** - Mistral's hosted API (non-Pro models)
+   - Access: Requires Mistral API key
+   - Network: `symbolic-llm-allowed` (opt-in via `--use-mistral-api` flag)
+   - License: Commercial use according to Mistral terms
+   
+3. **Local Mistral Model** - Self-hosted Mistral model
+   - Access: Local inference via `mistral-inference` or similar
+   - Network: `none` (fully local)
+   - Recommended model: `mistral-7b-instruct-v0.2` (Apache-2.0 licensed, good balance of quality and resource requirements)
+   - Alternative: `mistral-7b-latest` for most recent improvements
+
 Planned candidates for M4 evaluation (not yet committed to):
 
 - **Magenta GrooVAE** drum-checkpoints (Apache-2.0). Will only be added if the symbolic-groove-model backend proves we want it; the architecture treats it as one of many pluggable backends.

@@ -1,6 +1,6 @@
 # Agent instructions for BeatForge
 
-This file is read by Copilot CLI, the Copilot coding agent, and any other AI agent that opens a PR against `Zesseth/BeatForge`. Human contributors: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+This file is read by Mistral Vibe, Mistral coding agents, and any other AI agent that opens a PR against `Zesseth/BeatForge`. Human contributors: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 If you only read one section, read **§ 1 Non-negotiables**. Violating any item there will get your PR rejected without further review.
 
@@ -31,7 +31,7 @@ The architecture is intentionally **rules-first, ML-as-a-pluggable-enhancement**
    - **M0–M3** (rules-based) — **byte-identical** outputs for the same inputs + same `--seed`.
    - **M4–M5** (ML-backed) — **structurally equivalent** outputs (note-count per bar ± 5%, same section structure, same overall density profile). Byte-identical outputs across CPU/GPU/CUDA versions are **not** promised.
 5. **AGPL-3.0-or-later licensing flows downstream.** BeatForge is strong copyleft. Do not introduce a dependency, model checkpoint, or dataset that ships under a license incompatible with AGPL-3.0-or-later — that means no non-commercial, research-only, custom EULA, or field-of-use-restricted assets, and no Apache-2.0 *code* that contains incompatible patent terms in edge cases (vanilla Apache-2.0 IS one-way compatible into AGPL-3.0, so most permissive deps are fine). When in doubt, comment on the issue and wait for human review.
-6. **No secrets in commits. No AI-authorship trailers in commit messages.** The human merging the PR is the author. `Co-authored-by: Copilot` and similar are banned.
+6. **No secrets in commits. No AI-authorship trailers in commit messages.** The human merging the PR is the author. `Co-authored-by: Mistral Vibe`, `Co-authored-by: Copilot`, and similar are banned.
 
 ---
 
@@ -183,7 +183,7 @@ If an issue is ambiguous, comment on it describing the ambiguity and your propos
 - `main` is protected: direct pushes are blocked, force pushes are blocked, deletions are blocked.
 - Commit messages: Conventional Commits style preferred (`feat:`, `fix:`, `docs:`, `chore:`). Reference the issue with `Closes #N` in the PR body.
 - One issue = one PR whenever possible. If a PR closes multiple issues, list them all in the description.
-- Do **not** add `Co-authored-by: Copilot` or any AI-authorship trailer. The author is the human who merges.
+- Do **not** add `Co-authored-by: Mistral Vibe`, `Co-authored-by: Copilot`, or any AI-authorship trailer. The author is the human who merges.
 
 ---
 
