@@ -34,7 +34,7 @@ BeatForge on **pre-alpha** vaiheessa. Tama tiedosto kertoo miten testata kaikkea
 cd C:\Repos\Omat\BeatForge
 
 # Luo virtuaaliymparisto (jos ei ole jo olemassa)
-python -m venv .venv
+py -3 -m venv .venv
 
 # Aktivoi venv
 .\.venv\Scripts\activate

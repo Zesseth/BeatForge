@@ -39,7 +39,7 @@ See [`PRIVACY.md`](PRIVACY.md) for the full policy and the `no-audio-egress` tes
 > Target: Debian 12+, Python 3.11+.
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -U pip
 pip install -e ".[dev]"
