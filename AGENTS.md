@@ -37,16 +37,16 @@ The architecture is intentionally **rules-first, ML-as-a-pluggable-enhancement**
 
 ## 2. Repository state and milestones
 
-The repo is currently a clean slate (post-restructure on 2026-05-27). Source code does not yet exist. The work is organised into six milestones:
+**Current state:** M0 and M1 are implemented and merged (issues #20–#26): the CLI scaffold, `make-empty`, `validate-midi`, the no-audio-egress harness, `generate-basic`, `parse-prompt`, and prompt-driven `generate` all work, with 58 tests green. The remaining milestones are open on the issue board. The work is organised into six milestones:
 
-| Milestone | Theme | Issues |
-| --- | --- | --- |
-| M0 | Foundation (scaffold, MIDI baseline, validator, privacy harness) | M0.1 – M0.4 |
-| M1 | Rules-based generation (no audio, no network) | M1.1 – M1.3 |
-| M2 | Local audio analysis & alignment | M2.1 – M2.3 |
-| M3 | Sections + MIDI editing | M3.1 – M3.3 |
-| M4 | Symbolic groove model (pluggable backend, weight download only) | M4.1 – M4.3 |
-| M5 | Humanization, polish, optional symbolic LLM refine | M5.1 – M5.5 |
+| Milestone | Theme | Issues | Status |
+| --- | --- | --- | --- |
+| M0 | Foundation (scaffold, MIDI baseline, validator, privacy harness, docs) | M0.1 – M0.5 | ✅ merged |
+| M1 | Rules-based generation (no audio, no network) | M1.1 – M1.3 | ✅ merged |
+| M2 | Local audio analysis & alignment | M2.1 – M2.3 | 🔲 open |
+| M3 | Sections + MIDI editing | M3.1 – M3.3 | 🔲 open |
+| M4 | Symbolic groove model (pluggable backend, weight download only) | M4.1 – M4.3 | 🔲 open |
+| M5 | Humanization, polish, optional symbolic LLM refine | M5.1 – M5.5 | 🔲 open |
 
 Each issue specifies: files to touch, commands to run, artifacts produced, validation steps, network policy, dependencies, and DoD. Treat that template as a contract.
 
