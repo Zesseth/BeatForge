@@ -162,7 +162,7 @@ The #45 benchmark must record, per backend/model: refine success rate, median la
 
 ## Migration history
 
-**Previous:** GitHub Models / Copilot assist was mentioned as the primary option for M5.5
+**Previous:** GitHub Models was mentioned as the primary option for M5.5
 **Current:** Two-stage plan — Stage 1: Mistral API (online, #40); Stage 2: local backends (#43–#45), Mistral-preferred but model-agnostic
 
 **Rationale for change:**

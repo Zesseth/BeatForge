@@ -70,7 +70,7 @@ The remaining CLI surface (`analyze`, `groove`, `edit`, `models install`, `gener
 - [`PRIVACY.md`](PRIVACY.md) — privacy policy and no-audio-egress test plan
 - [`MODEL_SOURCES.md`](MODEL_SOURCES.md) — third-party model weights, versions, licenses, checksums
 - [`DATA_SOURCES.md`](DATA_SOURCES.md) — datasets used for any local training, with licenses
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (humans and AI agents)
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (humans and Mistral coding agents)
 - [`AGENTS.md`](AGENTS.md) — instructions for Mistral Vibe / other AI agents working in this repo
 - [`AI_STRATEGY.md`](AI_STRATEGY.md) — AI/LLM strategy: Mistral-first model priority for the optional symbolic refinement
 - [`TESTING.md`](TESTING.md) — manual and automated testing guide (current state, per-milestone)
