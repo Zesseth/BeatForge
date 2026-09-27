@@ -1,247 +1,181 @@
 # AI Strategy for BeatForge
 
-This document outlines the AI/ML strategy for BeatForge, with a focus on **privacy-preserving symbolic processing** and **Mistral model preference**.
+This document outlines the AI/ML strategy for BeatForge, with a focus on **privacy-preserving symbolic processing**, **Mistral model preference**, and a **two-stage implementation order for symbolic LLM refinement** (M5.5).
 
 ## Overview
 
 BeatForge uses AI/ML as **pluggable enhancements** to a rules-based core. All AI operations work on **symbolic data only** (text prompts, MIDI events, beat-grid timestamps) — **raw audio never leaves the machine**.
 
-## Model Priority Order
+The LLM never generates MIDI directly. It produces a small, schema-validated **JSON edit list** (a partial `StyleSpec` diff over the affected sections), which the rules-based engine applies to the MIDI. This keeps the musical guardrails deterministic and the LLM task small enough for local models.
 
-For symbolic LLM refinement (M5.5), the following priority order is established:
+## Two-stage implementation order (M5.5)
 
-### 1. Mistral Pro Subscription (Preferred)
+Symbolic LLM refinement is implemented in two stages, in this order:
 
-**Status:** Primary recommendation  
-**Access:** Mistral Pro API endpoint  
+| Stage | Scope | Tracking issues | Network policy |
+| --- | --- | --- | --- |
+| **Stage 1** | Online refine via **Mistral API (La Plateforme)** | #40 | `symbolic-llm-allowed` (opt-in) |
+| **Stage 2** | Local backends (model-agnostic evaluation, Ollama/llama.cpp adapters, benchmark) | #43, #44, #45 | `none` (local-only) |
+
+Stage 2 starts only after Stage 1's DoD is met.
+
+**Rationale:**
+
+- Stage 1 is the fastest path to a working end-to-end refine with the highest output quality (hosted models), and it forces the provider interface (`SymbolicRefineModel` protocol) to be designed up front, so Stage 2 local backends can plug in without breaking the CLI.
+- Stage 2 then delivers the fully-offline path, with the default local backend chosen from measured data (benchmark in #45) instead of assumptions.
+
+## Provider priority order
+
+Within symbolic LLM refinement, the following priority order applies:
+
+### 1. Mistral API (La Plateforme) — Stage 1
+
+**Status:** Primary recommendation (implemented first)
+**Access:** `https://api.mistral.ai` (OpenAI-compatible REST)
 **Requirements:**
-- Mistral Pro subscription
-- API key via environment variable `MISTRAL_PRO_API_KEY` or CLI flag `--mistral-pro-key`
-- Opt-in flag: `--use-mistral-pro`
 
-**Use Case:**
-- Highest quality symbolic refinement
-- Production use with commercial licensing
-- Best for users who need reliability and performance
-
-**Network Policy:** `symbolic-llm-allowed` (explicit opt-in required)
-
-### 2. Mistral Cloud API
-
-**Status:** Secondary option  
-**Access:** Mistral standard API endpoint  
-**Requirements:**
 - Mistral API key (free tier available)
 - Environment variable `MISTRAL_API_KEY` or CLI flag `--mistral-api-key`
-- Opt-in flag: `--use-mistral-api`
+- Opt-in flags: `--provider mistral-api` + `--allow-network-symbolic-llm`
 
 **Use Case:**
-- Good quality/price ratio
-- Suitable for testing and development
-- Backup when Pro is unavailable
+
+- Highest quality symbolic refinement (hosted Mistral models)
+- Fastest path to a working feature; no local model installation required
+- Establishes the `SymbolicRefineModel` protocol and payload contract
 
 **Network Policy:** `symbolic-llm-allowed` (explicit opt-in required)
 
-### 3. Local Mistral Model
+### 2. Local backends — Stage 2
 
-**Status:** Offline fallback  
-**Access:** Local inference  
+**Status:** Offline path, implemented after Stage 1
+**Access:** Local inference via Ollama or llama.cpp (`llama-server`), loopback only
 **Requirements:**
-- Mistral model weights downloaded via `drumgen models install`
-- Local inference backend (mistral-inference, vLLM, or similar)
-- Sufficient hardware (GPU recommended for 7B+ models)
 
-**Recommended Models:**
+- Local runtime installed by the user (Ollama or llama.cpp; not a BeatForge dependency)
+- Model ID configurable per backend (e.g. `--local-backend ollama --model mistral:7b`)
+- Hardware: ~8 GB RAM minimum for 7B-class models at Q4_K_M; GPU optional
 
-#### Primary Recommendation: mistral-7b-instruct-v0.2
-- **License:** Apache-2.0 (fully compatible with AGPL-3.0-or-later)
-- **Size:** ~14GB (quantized versions available: 8-bit ~7GB, 4-bit ~4GB)
-- **Quality:** Excellent for symbolic tasks, good instruction following
-- **Hardware:** Runs on consumer GPU (24GB VRAM for full precision, 8GB for 8-bit, 6GB for 4-bit)
-- **Rationale:** Proven stability, Apache-2.0 license, good balance of quality and resource requirements
+**Model-agnostic by design:** Mistral local models are the preferred candidate family (Apache-2.0), but the evaluation in #43 must compare at least three non-Mistral models (Llama 3.1/3.2 Instruct, Qwen2.5 Instruct, DeepSeek-R1-Distill). The default local backend and default local model are chosen from the #45 benchmark, not hard-coded.
 
-#### Alternative: mistral-7b-latest
-- **License:** Apache-2.0
-- **Size:** ~14GB
-- **Quality:** Most recent improvements from Mistral
-- **Consideration:** May have breaking changes between versions
+**Network Policy:** `none` (fully local, loopback only; no egress)
 
-#### Resource-Constrained: mistral-7b-instruct-v0.1
-- **License:** Apache-2.0
-- **Size:** ~14GB
-- **Quality:** Slightly older but well-tested
-- **Advantage:** Maximum stability, known compatibility
+### 3. Rules-based fallback
 
-**Implementation Notes:**
-- Requires `mistral-common` and `mistral-inference` Python packages
-- Can use `transformers` library as fallback
-- Quantization supported via `bitsandbytes` for reduced memory usage
-- CPU inference possible but slow (not recommended for production)
+**Status:** Always available
+**Access:** None required — this is the deterministic core
 
-**Network Policy:** `none` (fully local, no network required)
+If the selected provider fails validation twice or is unavailable, `refine-symbolic` falls back to the rules-based refiner and emits a warning. The command must never fail silently.
 
-## Local Model Implementation Plan
+## Local model candidates (Stage 2, evaluation subject of #43)
 
-### Model Download
-```bash
-# Install Mistral 7B Instruct
-drumgen models install --model mistral-7b-instruct-v0.2
+All weights are Apache-2.0 (one-way compatible with AGPL-3.0-or-later) and available as pre-quantized GGUF for Ollama/llama.cpp. Sizes are approximate Q4_K_M downloads; add runtime overhead and KV cache.
 
-# Verify installation
-drumgen models list
-```
+| Model | Ollama tag | Size (Q4_K_M) | Minimum hardware | Context | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Mistral 7B Instruct v0.3 | `mistral:7b` | ~4.4 GB | 8 GB RAM / 6 GB VRAM | 32K | Most proven; native function-calling tokens |
+| Ministral 3 8B (2512) | `ministral-3:8b` | ~5 GB | 8–12 GB RAM / 8 GB VRAM | 262K | Newest edge generation; requires Ollama ≥ 0.13.1 |
+| Mistral NeMo 12B (2407) | `mistral-nemo:12b` | ~7.1 GB | 16 GB RAM / 8–10 GB VRAM | 128K | Drop-in replacement for Mistral 7B |
+| Ministral 3 14B (2512) | `ministral-3:14b` | ~9 GB | 16 GB RAM / 12 GB VRAM | 262K | Best quality/RAM ratio without a GPU |
+| Mistral Small 3.2 24B | `mistral-small:24b` | ~14 GB | 16 GB VRAM (tight) / 32 GB RAM | 32K | Best quality on a single consumer GPU |
 
-### Inference Backend
-The local Mistral model will be integrated via:
+CPU-only inference works at roughly 4–16 tok/s for 7–14B models depending on the CPU; refine calls are batch-like, so seconds of latency is acceptable. GPU offload brings this to 30–85 tok/s.
 
-1. **Direct API compatibility:** Mistral models can be loaded using the `transformers` library with Mistral's official configuration
-2. **Abstraction layer:** All models implement the `SymbolicRefinementModel` interface for consistent integration
-3. **Hardware detection:** Automatic fallback to CPU if GPU is unavailable (with performance warning)
+**Non-Mistral comparison candidates (required by #43):** `qwen2.5:7b/14b-instruct` (Apache-2.0), `deepseek-r1-distill-*` (MIT), `llama3.1:8b` (Llama Community License — benchmark candidate only, not a default: the license is not OSI-open and carries a 700M MAU threshold and competitor restrictions).
 
-### Model Configuration
-```yaml
-# Example model entry for MODEL_SOURCES.md
-- name: mistral-7b-instruct-v0.2
-  version: v0.2
-  upstream_repo: https://github.com/mistralai/mistral-src
-  upstream_license: Apache-2.0
-  license_compatible_with_agpl3: true
-  weight_files:
-    - url: https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2/resolve/main/model.safetensors
-      sha256: <to-be-determined>
-      bytes: ~14000000000
-  loader: src/beatforge/models/backends/mistral_local.py
-  notes: |
-    Primary recommended local model. Apache-2.0 licensed, excellent for symbolic tasks.
-```
+## Integration architecture
 
-## Technical Requirements for Local Inference
-
-### Hardware Recommendations
-| Model | Precision | VRAM Required | RAM (CPU) | Inference Speed |
-|-------|-----------|---------------|-----------|------------------|
-| mistral-7b | 4-bit | 6GB | 16GB+ | ~5-10 tok/s |
-| mistral-7b | 8-bit | 8GB | 16GB+ | ~8-15 tok/s |
-| mistral-7b | 16-bit | 14GB | 32GB+ | ~10-20 tok/s |
-| mistral-7b | 32-bit | 28GB | 64GB+ | ~15-25 tok/s |
-
-### Software Dependencies
-```toml
-# pyproject.toml additions for local Mistral support
-[project.optional-dependencies]
-local-mistral = [
-    "transformers>=4.40.0",
-    "torch>=2.2.0",
-    "accelerate>=0.27.0",
-    "bitsandbytes>=0.43.0",  # Optional, for quantization
-    "sentencepiece>=0.2.0",
-]
-```
-
-## Integration Architecture
+The same provider interface serves both stages:
 
 ```
 src/beatforge/refine/
 ├── __init__.py
-├── llm.py                # Main LLM refinement module
-├── backends/
-│   ├── __init__.py
-│   ├── mistral_pro.py    # Mistral Pro API client
-│   ├── mistral_api.py    # Mistral Cloud API client
-│   └── mistral_local.py  # Local Mistral model
-└── interface.py          # SymbolicRefinementModel protocol
+├── interface.py          # SymbolicRefineModel protocol
+├── llm.py                # Stage 1: Mistral API client (api.mistral.ai)
+├── local_provider.py     # Stage 2: local backend selection
+└── backends/             # Stage 2 (#45)
+    ├── __init__.py
+    ├── ollama_backend.py     # Ollama REST (localhost:11434), schema-constrained via format
+    └── llamacpp_backend.py   # llama-server OpenAI-compatible API, GBNF grammar
 ```
 
-### Model Selection Logic
+### Model selection logic
+
 ```python
-# Pseudocode for model selection
-def get_refinement_model(config: RefineConfig) -> SymbolicRefinementModel:
-    if config.use_mistral_pro:
-        return MistralProClient(api_key=config.mistral_pro_key)
-    elif config.use_mistral_api:
+def get_refinement_model(config: RefineConfig) -> SymbolicRefineModel:
+    if config.provider == "mistral-api":
         return MistralAPIClient(api_key=config.mistral_api_key)
-    elif config.use_local_mistral:
-        return MistralLocalModel(model_path=config.local_model_path, device=config.device)
+    elif config.provider == "local":
+        return LocalRefineBackend(
+            backend=config.local_backend,
+            model_id=config.local_model_id,
+        )
     else:
-        # Fallback to rules-based
         return RulesBasedRefiner()
 ```
 
-## Privacy Considerations
+## Privacy considerations
 
-All Mistral model usage complies with BeatForge's privacy requirements:
+All LLM usage complies with BeatForge's privacy requirements:
 
 - **Symbolic-only:** Only text prompts and MIDI data (symbolic representations) are sent to models
 - **No audio:** Raw audio, spectrograms, or audio-derived features are never transmitted
-- **Opt-in network:** Network access requires explicit CLI flags
-- **Local option:** Full offline capability with local models
+- **Opt-in network:** Network access requires explicit CLI flags (`--allow-network-symbolic-llm`)
+- **Local option:** Full offline capability with local models (loopback only, no egress)
+- **Payload cap:** Outbound payloads are hard-capped (16 KB) and covered by the no-audio-egress harness
 
-## CLI Interface
+## CLI interface
 
 ```bash
-# Using Mistral Pro
-drumgen refine-symbolic --input song.mid --prompt "add more variation" \
-    --use-mistral-pro --mistral-pro-key $MISTRAL_PRO_KEY
+# Stage 1: Mistral API (opt-in, network)
+drumgen refine-symbolic --midi song.mid --groove groove.json \
+    --prompt "add more variation" \
+    --provider mistral-api --allow-network-symbolic-llm
 
-# Using Mistral Cloud API
-drumgen refine-symbolic --input song.mid --prompt "add more variation" \
-    --use-mistral-api --mistral-api-key $MISTRAL_API_KEY
-
-# Using local Mistral model
-drumgen refine-symbolic --input song.mid --prompt "add more variation" \
-    --use-local-mistral --local-model-path ~/.beatforge/models/mistral-7b-instruct-v0.2
-
-# Check available models
-drumgen models list --type llm
-
-# Install local model
-drumgen models install mistral-7b-instruct-v0.2
+# Stage 2: local backend (no network)
+drumgen refine-symbolic --midi song.mid --groove groove.json \
+    --prompt "add more variation" \
+    --provider local --local-backend ollama --model mistral:7b
 ```
 
-## Evaluation Criteria for Local Models
+API keys are read from `MISTRAL_API_KEY` or `--mistral-api-key`; never stored, never logged, never committed.
 
-When selecting local Mistral models, we evaluate based on:
+## Evaluation criteria for local models (#43)
 
-1. **License Compatibility:** Must be compatible with AGPL-3.0-or-later
-2. **Quality:** Performance on symbolic music tasks (MIDI understanding, pattern generation)
-3. **Resource Efficiency:** Memory and compute requirements
+When selecting local models, we evaluate based on:
+
+1. **License Compatibility:** Must be compatible with AGPL-3.0-or-later (Apache-2.0 or MIT preferred)
+2. **Quality:** Performance on the symbolic drum-refine task (schema-valid edit lists, musically sensible changes)
+3. **Resource Efficiency:** Memory and compute requirements on Debian 12+ target hardware
 4. **Stability:** Proven track record, minimal breaking changes
 5. **Maintenance:** Active upstream support and updates
 6. **Download Size:** Reasonable for users to download and store
 
-### Model Comparison
+The #45 benchmark must record, per backend/model: refine success rate, median latency, memory footprint, and a subjective quality rating. The default local backend is chosen from these results.
 
-| Model | License | Quality | Resources | Stability | Recommended |
-|-------|---------|---------|-----------|-----------|-------------|
-| mistral-7b-instruct-v0.2 | Apache-2.0 | Excellent | Moderate | High | ✅ Yes |
-| mistral-7b-latest | Apache-2.0 | Excellent | Moderate | Medium | ⚠️ With caution |
-| mistral-7b-instruct-v0.1 | Apache-2.0 | Good | Moderate | Very High | ✅ Yes |
-| mixtral-8x7b | Apache-2.0 | Excellent | High | Medium | ❌ Too large |
-| mixtral-8x22b | Apache-2.0 | Excellent | Very High | Low | ❌ Too large |
+## Future considerations
 
-## Future Considerations
+1. **Mistral Pro subscription tier:** can be added later as an additional remote provider behind the same protocol if the free API tier proves limiting
+2. **Quantization:** Support for Q4/Q5/Q6 GGUF quants to reduce memory usage
+3. **Custom fine-tuning:** Option to fine-tune models on domain-specific MIDI data
+4. **Hardware acceleration:** CUDA/ROCm offload support via the same backends
 
-1. **Model Updates:** Regular review of new Mistral releases for potential upgrades
-2. **Quantization:** Support for 4-bit and 8-bit quantization to reduce memory usage
-3. **Model Fusion:** Potential for ensemble approaches combining multiple models
-4. **Custom Fine-tuning:** Option to fine-tune models on domain-specific MIDI data
-5. **Hardware Acceleration:** Support for TPU, NPU, and other specialized hardware
+## Migration history
 
-## Migration from Previous Strategy
+**Previous:** GitHub Models / Copilot assist was mentioned as the primary option for M5.5
+**Current:** Two-stage plan — Stage 1: Mistral API (online, #40); Stage 2: local backends (#43–#45), Mistral-preferred but model-agnostic
 
-**Previous:** GitHub Models / Copilot assist was mentioned as the primary option for M5.5  
-**Current:** Mistral models with clear priority order (Pro → API → Local)  
+**Rationale for change:**
 
-**Rationale for Change:**
 - Mistral's Apache-2.0 licensed models are fully compatible with AGPL-3.0-or-later
-- Better control over data and privacy with Mistral's transparent approach
-- Superior performance on symbolic tasks compared to Copilot
-- Local inference option provides complete offline capability
+- Online-first gives the fastest working feature and forces the provider interface up front
+- Local backends then deliver complete offline capability, chosen from measured benchmark data
 - Mistral's focus on open models aligns with BeatForge's open-source philosophy
 
 ## References
 
 - [Mistral AI](https://mistral.ai/)
+- [Mistral API (La Plateforme)](https://docs.mistral.ai/)
 - [Mistral Models on Hugging Face](https://huggingface.co/mistralai)
-- [Mistral License](https://github.com/mistralai/mistral-src/blob/main/LICENSE)
 - [Apache-2.0 License](https://www.apache.org/licenses/LICENSE-2.0)
+- Tracking issues: [#40](https://github.com/Zesseth/BeatForge/issues/40) (Stage 1), [#43](https://github.com/Zesseth/BeatForge/issues/43), [#44](https://github.com/Zesseth/BeatForge/issues/44), [#45](https://github.com/Zesseth/BeatForge/issues/45) (Stage 2)

@@ -33,23 +33,19 @@ Every entry follows this template:
 
 ## LLM Model Priority for Symbolic Refinement (M5.5)
 
-For the optional symbolic LLM refinement feature, the following priority order applies:
+For the optional symbolic LLM refinement feature, implementation is ordered in two stages (see `AI_STRATEGY.md` for the full rationale):
 
-1. **Mistral Pro Subscription** ( Preferred ) - Mistral's hosted Pro model via subscription
-   - Access: Requires Mistral Pro API key
-   - Network: `symbolic-llm-allowed` (opt-in via `--use-mistral-pro` flag)
+1. **Stage 1 — Mistral API (La Plateforme)** — implemented first (#40)
+   - Access: Requires Mistral API key (free tier available)
+   - Network: `symbolic-llm-allowed` (opt-in via `--provider mistral-api` + `--allow-network-symbolic-llm` flags)
    - License: Commercial use according to Mistral terms
    
-2. **Mistral Cloud API** - Mistral's hosted API (non-Pro models)
-   - Access: Requires Mistral API key
-   - Network: `symbolic-llm-allowed` (opt-in via `--use-mistral-api` flag)
-   - License: Commercial use according to Mistral terms
-   
-3. **Local Mistral Model** - Self-hosted Mistral model
-   - Access: Local inference via `mistral-inference` or similar
-   - Network: `none` (fully local)
-   - Recommended model: `mistral-7b-instruct-v0.2` (Apache-2.0 licensed, good balance of quality and resource requirements)
-   - Alternative: `mistral-7b-latest` for most recent improvements
+2. **Stage 2 — Local Mistral Model** — implemented after Stage 1 (#43, #44, #45)
+   - Access: Local inference via Ollama or llama.cpp (loopback only)
+   - Network: `none` (fully local, no egress)
+   - Model-agnostic evaluation required (#43): at least three non-Mistral candidates (Llama 3.1/3.2 Instruct, Qwen2.5 Instruct, DeepSeek-R1-Distill) compared against Mistral local models
+   - Recommended Mistral candidates: `mistral:7b` (Mistral 7B Instruct v0.3, Apache-2.0) as the minimum-hardware default; `ministral-3:8b`/`ministral-3:14b`, `mistral-nemo:12b`, or `mistral-small:24b` as hardware allows
+   - The default local model is chosen from the #45 benchmark, not hard-coded
 
 Planned candidates for M4 evaluation (not yet committed to):
 
