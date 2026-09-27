@@ -31,22 +31,22 @@ The architecture is intentionally **rules-first, ML-as-a-pluggable-enhancement**
    - **M0–M3** (rules-based) — **byte-identical** outputs for the same inputs + same `--seed`.
    - **M4–M5** (ML-backed) — **structurally equivalent** outputs (note-count per bar ± 5%, same section structure, same overall density profile). Byte-identical outputs across CPU/GPU/CUDA versions are **not** promised.
 5. **AGPL-3.0-or-later licensing flows downstream.** BeatForge is strong copyleft. Do not introduce a dependency, model checkpoint, or dataset that ships under a license incompatible with AGPL-3.0-or-later — that means no non-commercial, research-only, custom EULA, or field-of-use-restricted assets, and no Apache-2.0 *code* that contains incompatible patent terms in edge cases (vanilla Apache-2.0 IS one-way compatible into AGPL-3.0, so most permissive deps are fine). When in doubt, comment on the issue and wait for human review.
-6. **No secrets in commits. No AI-authorship trailers in commit messages.** The human merging the PR is the author. `Co-authored-by: Mistral Vibe`, `Co-authored-by: Copilot`, and similar are banned.
+6. **No secrets in commits. No AI-authorship trailers in commit messages.** The human merging the PR is the author. `Co-authored-by: Mistral Vibe` and any similar AI-authorship trailer are banned.
 
 ---
 
 ## 2. Repository state and milestones
 
-The repo is currently a clean slate (post-restructure on 2026-05-27). Source code does not yet exist. The work is organised into six milestones:
+**Current state:** M0 and M1 are implemented and merged (issues #20–#26): the CLI scaffold, `make-empty`, `validate-midi`, the no-audio-egress harness, `generate-basic`, `parse-prompt`, and prompt-driven `generate` all work, with 58 tests green. The remaining milestones are open on the issue board. The work is organised into six milestones:
 
-| Milestone | Theme | Issues |
-| --- | --- | --- |
-| M0 | Foundation (scaffold, MIDI baseline, validator, privacy harness) | M0.1 – M0.4 |
-| M1 | Rules-based generation (no audio, no network) | M1.1 – M1.3 |
-| M2 | Local audio analysis & alignment | M2.1 – M2.3 |
-| M3 | Sections + MIDI editing | M3.1 – M3.3 |
-| M4 | Symbolic groove model (pluggable backend, weight download only) | M4.1 – M4.3 |
-| M5 | Humanization, polish, optional symbolic LLM refine | M5.1 – M5.5 |
+| Milestone | Theme | Issues | Status |
+| --- | --- | --- | --- |
+| M0 | Foundation (scaffold, MIDI baseline, validator, privacy harness, docs) | M0.1 – M0.5 | ✅ merged |
+| M1 | Rules-based generation (no audio, no network) | M1.1 – M1.3 | ✅ merged |
+| M2 | Local audio analysis & alignment | M2.1 – M2.3 | 🔲 open |
+| M3 | Sections + MIDI editing | M3.1 – M3.3 | 🔲 open |
+| M4 | Symbolic groove model (pluggable backend, weight download only) | M4.1 – M4.3 | 🔲 open |
+| M5 | Humanization, polish, optional symbolic LLM refine | M5.1 – M5.5 | 🔲 open |
 
 Each issue specifies: files to touch, commands to run, artifacts produced, validation steps, network policy, dependencies, and DoD. Treat that template as a contract.
 
@@ -183,7 +183,7 @@ If an issue is ambiguous, comment on it describing the ambiguity and your propos
 - `main` is protected: direct pushes are blocked, force pushes are blocked, deletions are blocked.
 - Commit messages: Conventional Commits style preferred (`feat:`, `fix:`, `docs:`, `chore:`). Reference the issue with `Closes #N` in the PR body.
 - One issue = one PR whenever possible. If a PR closes multiple issues, list them all in the description.
-- Do **not** add `Co-authored-by: Mistral Vibe`, `Co-authored-by: Copilot`, or any AI-authorship trailer. The author is the human who merges.
+- Do **not** add `Co-authored-by: Mistral Vibe` or any other AI-authorship trailer. The author is the human who merges.
 
 ---
 

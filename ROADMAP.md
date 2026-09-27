@@ -8,7 +8,7 @@ This roadmap supersedes the old `dev_info. md` and the original 19-issue backlog
 2. **Symbolic core.** All "AI" — including the optional ML model and any external LLM assist — operates on symbolic data (text prompts, MIDI events, beat-grid timestamps), never on audio buffers.
 3. **Rules before ML.** Each milestone delivers usable output with deterministic rule-based logic first; ML is a *pluggable* enhancement, not a hard dependency.
 4. **REAPER-ready, always.** Every MIDI artifact must import cleanly into REAPER on Linux (GM drums, channel 10, tempo + time-signature meta events).
-5. **Copilot-executable.** Every issue is written so a Copilot agent can execute it: exact files to touch, exact commands, explicit output artifacts, deterministic validation steps, explicit network policy.
+5. **Agent-executable.** Every issue is written so a Mistral coding agent can execute it: exact files to touch, exact commands, explicit output artifacts, deterministic validation steps, explicit network policy.
 
 ## Milestones
 

@@ -161,10 +161,7 @@ def get_refinement_model(config: RefineConfig) -> SymbolicRefinementModel:
     elif config.use_mistral_api:
         return MistralAPIClient(api_key=config.mistral_api_key)
     elif config.use_local_mistral:
-        return MistralLocalModel(
-            model_path=config.local_model_path,
-            device=config.device
-        )
+        return MistralLocalModel(model_path=config.local_model_path, device=config.device)
     else:
         # Fallback to rules-based
         return RulesBasedRefiner()

@@ -19,7 +19,7 @@ The following data is processed **only** on the user's machine and is **never** 
 
 ## 2. What may leave the machine — only with explicit user opt-in
 
-Some optional features (e.g. symbolic MIDI refinement via GitHub Models) require a network call. When such a feature is invoked, **only** the following data is allowed in the request payload:
+Some optional features (e.g. symbolic MIDI refinement via a Mistral model, per [`AI_STRATEGY.md`](AI_STRATEGY.md)) require a network call. When such a feature is invoked, **only** the following data is allowed in the request payload:
 
 - Text prompts the user typed.
 - Tempo as a single number (e.g. `124.0`).

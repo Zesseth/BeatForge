@@ -2,7 +2,7 @@
 
 **Privacy-first, Debian-first CLI that generates editable drum MIDI for REAPER from local audio and/or text prompts.**
 
-> Status: pre-alpha. Repository is currently a clean slate after architectural restructure (2026-05-27). See [`ROADMAP.md`](ROADMAP.md) and the GitHub Issues backlog.
+> Status: pre-alpha. M0 (foundation) and M1 (rules-based prompt-driven generation) are implemented and merged — 58 tests green, CI clean. Audio analysis, MIDI editing, and the ML groove model land in M2–M5. See [`ROADMAP.md`](ROADMAP.md) and the GitHub Issues backlog.
 
 ---
 
@@ -25,7 +25,7 @@
 
 **Raw audio never leaves your machine.** Not as PCM, not as spectrograms, not as MFCCs, not as any reversible representation.
 
-Optional external calls (e.g. GitHub Models for prompt-driven symbolic refinement) are allowed only with:
+Optional external calls (e.g. a Mistral model for symbolic refinement, see [`AI_STRATEGY.md`](AI_STRATEGY.md)) are allowed only with:
 
 - text prompts you typed,
 - and/or small, non-reversible derived features (tempo as a float, beat-grid timestamps, bar structure, symbolic MIDI events).
@@ -34,7 +34,7 @@ See [`PRIVACY.md`](PRIVACY.md) for the full policy and the `no-audio-egress` tes
 
 ---
 
-## Quickstart (planned, will be implemented in M0)
+## Quickstart
 
 > Target: Debian 12+, Python 3.11+.
 
@@ -49,9 +49,18 @@ drumgen make-empty --bars 32 --bpm 120 --out drums.mid
 
 # Validate it
 drumgen validate-midi drums.mid
+
+# Prompt-driven generation (M1): parse a prompt into a StyleSpec, then generate
+drumgen parse-prompt --prompt "punk 180 bpm, snare on 2 and 4, 16th hats, fills before chorus" --out spec.json
+drumgen generate --stylespec spec.json --out punk_drums.mid
+
+# Or in one step
+drumgen generate --prompt "funk 105 bpm, ghost notes, shuffle hats" --out funk_drums.mid
 ```
 
-The full CLI surface (`generate`, `analyze`, `groove`, `edit`, `models install`, …) is implemented incrementally in milestones M1–M5.
+Import the resulting `.mid` into REAPER: GM drum map, channel 10, tempo and 4/4 time-signature meta events are already embedded. Map your drum sampler to channel 10 and edit freely.
+
+The remaining CLI surface (`analyze`, `groove`, `edit`, `models install`, `generate-ml`, …) is implemented incrementally in milestones M2–M5; the stub subcommands print a notice and exit 0 until their milestone lands. See [`TESTING.md`](TESTING.md) for the manual test plan and [`docs/STYLESPEC.md`](docs/STYLESPEC.md) for the prompt schema.
 
 ---
 
@@ -61,8 +70,11 @@ The full CLI surface (`generate`, `analyze`, `groove`, `edit`, `models install`,
 - [`PRIVACY.md`](PRIVACY.md) — privacy policy and no-audio-egress test plan
 - [`MODEL_SOURCES.md`](MODEL_SOURCES.md) — third-party model weights, versions, licenses, checksums
 - [`DATA_SOURCES.md`](DATA_SOURCES.md) — datasets used for any local training, with licenses
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (humans and GitHub Copilot agents)
-- [`AGENTS.md`](AGENTS.md) — instructions for Copilot CLI / Copilot agents working in this repo
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (humans and AI agents)
+- [`AGENTS.md`](AGENTS.md) — instructions for Mistral Vibe / other AI agents working in this repo
+- [`AI_STRATEGY.md`](AI_STRATEGY.md) — AI/LLM strategy: Mistral-first model priority for the optional symbolic refinement
+- [`TESTING.md`](TESTING.md) — manual and automated testing guide (current state, per-milestone)
+- [`docs/STYLESPEC.md`](docs/STYLESPEC.md) — the `StyleSpec` schema and prompt parsing rules
 
 ---
 

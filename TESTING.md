@@ -433,7 +433,7 @@ for ev in events[:20]:
 
 - **[ROADMAP.md](ROADMAP.md)** – Kehityssuunnitelma ja milestonet
 - **[PRIVACY.md](PRIVACY.md)** – Privacy policy ja no-audio-egress
-- **[AGENTS.md](AGENTS.md)** – Ohjeet Copilot agentille
+- **[AGENTS.md](AGENTS.md)** – Ohjeet Mistral agentille
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** – Kontribuointiohjeet
 - **[docs/STYLESPEC.md](docs/STYLESPEC.md)** – StyleSpec skeeman dokumentaatio
 
