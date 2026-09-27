@@ -39,13 +39,13 @@ examples/               # end-to-end usage examples
 docs/                   # extended docs (architecture, schemas)
 ```
 
-## Working with AI agents
+## Working with Mistral coding agents
 
 See [`AGENTS.md`](AGENTS.md) for the full instructions. In short:
 
-- Every issue is written so it can be executed by an AI agent without manual gap-filling.
+- Every issue is written so it can be executed by a Mistral coding agent without manual gap-filling.
 - Issues must include: files to touch, commands to run, artifacts produced, validation steps, and explicit network policy.
-- If an AI agent encounters ambiguity it cannot resolve from the issue text + repo state, it should comment on the issue rather than guess.
+- If a Mistral coding agent encounters ambiguity it cannot resolve from the issue text + repo state, it should comment on the issue rather than guess.
 - [`AI_STRATEGY.md`](AI_STRATEGY.md) defines the Mistral-first model priority used by the optional symbolic-refinement feature (M5.5).
 
 ## Commit messages

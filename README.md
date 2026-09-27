@@ -25,7 +25,7 @@
 
 **Raw audio never leaves your machine.** Not as PCM, not as spectrograms, not as MFCCs, not as any reversible representation.
 
-Optional external calls (e.g. a Mistral model for symbolic refinement, see [`AI_STRATEGY.md`](AI_STRATEGY.md)) are allowed only with:
+Optional external calls (e.g. the Mistral API for prompt-driven symbolic refinement, M5.5 Stage 1, see [`AI_STRATEGY.md`](AI_STRATEGY.md)) are allowed only with:
 
 - text prompts you typed,
 - and/or small, non-reversible derived features (tempo as a float, beat-grid timestamps, bar structure, symbolic MIDI events).
@@ -70,7 +70,7 @@ The remaining CLI surface (`analyze`, `groove`, `edit`, `models install`, `gener
 - [`PRIVACY.md`](PRIVACY.md) — privacy policy and no-audio-egress test plan
 - [`MODEL_SOURCES.md`](MODEL_SOURCES.md) — third-party model weights, versions, licenses, checksums
 - [`DATA_SOURCES.md`](DATA_SOURCES.md) — datasets used for any local training, with licenses
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (humans and AI agents)
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (humans and Mistral coding agents)
 - [`AGENTS.md`](AGENTS.md) — instructions for Mistral Vibe / other AI agents working in this repo
 - [`AI_STRATEGY.md`](AI_STRATEGY.md) — AI/LLM strategy: Mistral-first model priority for the optional symbolic refinement
 - [`TESTING.md`](TESTING.md) — manual and automated testing guide (current state, per-milestone)
