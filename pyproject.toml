@@ -39,6 +39,8 @@ dev = [
 
 [project.scripts]
 drumgen = "beatforge.cli.main:app"
+beatforge = "beatforge.cli.main:app"
+BeatForge = "beatforge.cli.main:app"
 
 [project.urls]
 Homepage = "https://github.com/Zesseth/BeatForge"
