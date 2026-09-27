@@ -30,6 +30,8 @@ IMPLEMENTED_SUBCOMMANDS = {
     "generate-basic",
     "parse-prompt",
     "generate",
+    "analyze",
+    "groove",
 }
 
 

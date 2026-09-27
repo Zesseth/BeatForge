@@ -132,14 +132,56 @@ def parse_prompt(
 def generate(
     prompt: str | None = typer.Option(None, "--prompt"),
     stylespec: Path | None = typer.Option(None, "--stylespec", help="StyleSpec JSON file."),
+    audio: Path | None = typer.Option(
+        None,
+        "--audio",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local audio to align to (M2.3).",
+    ),
+    analysis: Path | None = typer.Option(
+        None,
+        "--analysis",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Existing analysis.json.",
+    ),
+    groove_path: Path | None = typer.Option(
+        None, "--groove", exists=True, dir_okay=False, readable=True, help="Existing groove.json."
+    ),
+    cache_dir: Path | None = typer.Option(
+        None, "--cache-dir", help="Optionally cache in-process analysis JSON here."
+    ),
+    tempo_mode: str = typer.Option(
+        "follow", "--tempo-mode", help="follow (audio tempo) or fixed (ignore analysed tempo)."
+    ),
     bars: int = typer.Option(96, "--bars", min=1),
     bpm: int | None = typer.Option(None, "--bpm", min=20, max=400),
+    bpm_override: float | None = typer.Option(
+        None, "--bpm-override", min=20, max=400, help="Force tempo estimation to this BPM."
+    ),
     seed: int = typer.Option(7, "--seed"),
     out: Path = typer.Option(..., "--out"),
     ppq: int = typer.Option(480, "--ppq", min=24),
 ) -> None:
-    """Generate drum MIDI from a StyleSpec or prompt (M1.3)."""
+    """Generate drum MIDI from a StyleSpec or prompt (M1.3), optionally audio-aligned (M2.3)."""
     import json as _json
+
+    from beatforge.audio.analyze import Analysis, analysis_to_json
+    from beatforge.audio.groove import analyze_groove, groove_to_json
+    from beatforge.gen.aligned import generate_aligned_events, load_analysis, load_groove
+
+    def _coerce_analysis(obj: Analysis) -> Analysis:
+        """Narrow a Groove (subclass) or Analysis to Analysis for aligned generation."""
+        if not isinstance(obj, Analysis):
+            raise TypeError(f"expected Analysis or Groove, got {type(obj).__name__}")
+        return obj
+
+    audio_sources = [s for s in (audio, analysis, groove_path) if s is not None]
+    if len(audio_sources) > 1:
+        raise typer.BadParameter("provide at most one of --audio, --analysis, or --groove")
 
     if (prompt is None) == (stylespec is None):
         raise typer.BadParameter("provide exactly one of --prompt or --stylespec")
@@ -149,29 +191,101 @@ def generate(
     else:
         assert stylespec is not None
         payload = _json.loads(stylespec.read_text(encoding="utf-8"))
-        # accept either bare spec or {"stylespec": {...}} (what parse-prompt writes)
         if "stylespec" in payload:
             payload = payload["stylespec"]
         spec = StyleSpec(**payload)
 
-    effective_bpm = bpm if bpm is not None else (spec.bpm if spec.bpm is not None else 120)
-    events = generate_from_stylespec(spec, bars=bars, seed=seed, ppq=ppq)
-    path = write_drum_midi(events, out, bpm=effective_bpm, ppq=ppq)
+    if not audio_sources:
+        effective_bpm = bpm if bpm is not None else (spec.bpm if spec.bpm is not None else 120)
+        events = generate_from_stylespec(spec, bars=bars, seed=seed, ppq=ppq)
+        path = write_drum_midi(events, out, bpm=effective_bpm, ppq=ppq)
+        typer.echo(
+            f"wrote {path} ({len(events)} note events) bpm={effective_bpm} spec={spec.model_dump()}"
+        )
+        return
+
+    if audio is not None:
+        groove_result = analyze_groove(audio, bpm_override=bpm_override)
+        analysed: Analysis = groove_result
+        if cache_dir is not None:
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            stem = audio.stem
+            (cache_dir / f"{stem}.analysis.json").write_text(
+                analysis_to_json(groove_result), encoding="utf-8"
+            )
+            (cache_dir / f"{stem}.groove.json").write_text(
+                groove_to_json(groove_result), encoding="utf-8"
+            )
+    elif analysis is not None:
+        analysed = load_analysis(analysis)
+    else:
+        assert groove_path is not None
+        analysed = load_groove(groove_path)
+
+    analysed = _coerce_analysis(analysed)
+    if tempo_mode == "fixed":
+        effective_bpm = bpm if bpm is not None else (spec.bpm if spec.bpm is not None else 120)
+    else:
+        if bpm is not None:
+            raise typer.BadParameter(
+                "--bpm conflicts with --tempo-mode follow; use --tempo-mode fixed"
+            )
+        effective_bpm = round(analysed.tempo_bpm)
+
+    events = generate_aligned_events(analysed, spec, seed=seed, ppq=ppq)
+    ts_num, ts_den = analysed.time_signature.split("/", 1)
+    path = write_drum_midi(
+        events,
+        out,
+        bpm=int(max(20, min(400, effective_bpm))),
+        time_signature=(int(ts_num), int(ts_den)),
+        ppq=ppq,
+    )
     typer.echo(
-        f"wrote {path} ({len(events)} note events) bpm={effective_bpm} spec={spec.model_dump()}"
+        f"wrote {path} ({len(events)} note events) bpm={int(max(20, min(400, effective_bpm)))} "
+        f"bars={len(analysed.bars)} audio_aligned=True"
     )
 
 
 @app.command("analyze")
-def analyze() -> None:
-    """Analyse a local audio stem and emit derived features (M2.1)."""
-    _stub("analyze")
+def analyze(
+    audio: Path = typer.Option(..., "--audio", exists=True, dir_okay=False, readable=True),
+    out: Path = typer.Option(..., "--out"),
+    bpm_override: float | None = typer.Option(
+        None, "--bpm-override", min=20, max=400, help="Skip tempo estimation and use this BPM."
+    ),
+    time_signature: str = typer.Option("4/4", "--time-signature", help="e.g. 4/4."),
+) -> None:
+    """Analyse a local audio file into analysis.json (M2.1). Local-only, no network."""
+    from beatforge.audio.analyze import analysis_to_json, analyze_audio
+
+    result = analyze_audio(audio, bpm_override=bpm_override, time_signature=time_signature)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(analysis_to_json(result), encoding="utf-8")
+    typer.echo(
+        f"wrote {out} bpm={result.tempo_bpm} beats={len(result.beats_s)} bars={len(result.bars)}"
+    )
 
 
 @app.command("groove")
-def groove() -> None:
-    """Extract a per-bar groove fingerprint from analysis output (M2.2)."""
-    _stub("groove")
+def groove(
+    audio: Path = typer.Option(..., "--audio", exists=True, dir_okay=False, readable=True),
+    out: Path = typer.Option(..., "--out"),
+    bpm_override: float | None = typer.Option(
+        None, "--bpm-override", min=20, max=400, help="Skip tempo estimation and use this BPM."
+    ),
+    time_signature: str = typer.Option("4/4", "--time-signature", help="e.g. 4/4."),
+) -> None:
+    """Extract groove.json (onsets + section hints) from a local audio file (M2.2)."""
+    from beatforge.audio.groove import analyze_groove, groove_to_json
+
+    result = analyze_groove(audio, bpm_override=bpm_override, time_signature=time_signature)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(groove_to_json(result), encoding="utf-8")
+    typer.echo(
+        f"wrote {out} onsets={len(result.onsets_s)} "
+        f"sections={len(result.section_hints)} bars={len(result.bars)}"
+    )
 
 
 @app.command("edit")
