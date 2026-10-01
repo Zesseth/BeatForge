@@ -222,3 +222,21 @@ Before flipping the visibility switch from private to public, verify:
 - [ ] Run `./scripts/apply-branch-protection.sh` immediately after the visibility change so `main` is locked the moment external contributors can see it. For full-public hardening, consider also flipping the bypass actor's `bypass_mode` from `always` to `pull_request` so admin bypasses still go through a PR audit trail.
 
 When all of the above is checked, change repo visibility and apply the ruleset. Until then, treat `main` discipline as a self-imposed convention — there is no GitHub-side enforcement on Free-tier private repos.
+
+---
+
+## 10. Central AI memory (machine: paradox)
+
+This repository is developed on the machine `paradox`. All agent session
+notes, learnings and logs for this project are stored in the central memory
+repository `/mnt/data/Repos/ai-memory` (GitHub: Zesseth/ai-memory), under
+`projects/BeatForge/`:
+
+- At session start run `git -C /mnt/data/Repos/ai-memory pull --ff-only`
+  and read the latest project notes there before re-deriving context.
+- After saving notes, commit and push ai-memory (`git add . && git commit
+  -m "<description>" && git push origin main`). Never end a session with
+  uncommitted memory content. A user-level Vibe hook syncs ai-memory both
+  ways after every turn as a safety net, but do not rely on it as the
+  primary mechanism.
+- Never store API keys or other secrets in any repository.
