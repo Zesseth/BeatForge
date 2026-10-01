@@ -19,12 +19,16 @@ from beatforge.midi.validator import validate_midi_file
 from beatforge.midi.writer import write_drum_midi
 from beatforge.prompt.parser import parse_prompt as _parse_prompt
 from beatforge.prompt.stylespec import StyleSpec
+from beatforge.ui.wizard import run_wizard
 
 app = typer.Typer(
     name="drumgen",
     add_completion=False,
     no_args_is_help=True,
-    help="BeatForge — privacy-first, prompt-driven drum MIDI generator.",
+    help=(
+        "BeatForge — privacy-first, prompt-driven drum MIDI generator.\n\n"
+        "New here? Run `drumgen ui` — it asks simple questions and writes the file for you."
+    ),
 )
 
 
@@ -126,6 +130,14 @@ def parse_prompt(
         typer.echo(f"wrote {out}")
     else:
         typer.echo(text, nl=False)
+
+
+@app.command("ui")
+def ui(
+    out: Path | None = typer.Option(None, "--out", help="Output .mid path (asked if omitted)."),
+) -> None:
+    """Guided mode: answer simple questions, get a drum MIDI file."""
+    run_wizard(out=out)
 
 
 @app.command("generate")

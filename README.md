@@ -44,6 +44,9 @@ source .venv/bin/activate
 pip install -U pip
 pip install -e ".[dev]"
 
+# Easiest way: guided mode — answer simple questions, get a drum MIDI file
+drumgen ui
+
 # Baseline: generate a simple REAPER-ready drum MIDI without any audio or prompt
 drumgen make-empty --bars 32 --bpm 120 --out drums.mid
 
