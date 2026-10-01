@@ -14,6 +14,7 @@ EXPECTED_SUBCOMMANDS = {
     "generate-basic",
     "parse-prompt",
     "generate",
+    "ui",
     "analyze",
     "groove",
     "edit",
@@ -25,6 +26,7 @@ EXPECTED_SUBCOMMANDS = {
 # cannot be invoked with no arguments. They are still expected to appear in
 # ``--help`` (verified by ``test_help_lists_all_expected_subcommands``).
 IMPLEMENTED_SUBCOMMANDS = {
+    "ui",
     "make-empty",
     "validate-midi",
     "generate-basic",

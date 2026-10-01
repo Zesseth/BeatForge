@@ -320,6 +320,26 @@ tests/privacy/test_no_audio_egress.py::test_help_opens_no_socket PASSED
 tests/privacy/test_no_audio_egress.py::test_recorder_sees_no_traffic_from_cli PASSED
 tests/privacy/test_no_audio_egress.py::test_recorder_sees_no_traffic_from_cli PASSED
 
+# UI Testit (7 testia) — drumgen ui (ohjattu tila)
+
+tests/test_ui_wizard.py — kaikki interaktiivisen velhon polut:
+
+- test_ui_runs_end_to_end_with_defaults — oletuksilla koko veljo läpi, MIDI validi
+- test_ui_accepts_prompt_and_overrides — oma kuvaus + valikkovalinnat
+- test_ui_abort_writes_nothing — keskeytys ei kirjoita mitään
+- test_ui_rejects_invalid_number_then_recovers — virhesyöte → uusinta kysymys
+- test_ui_output_passes_validator — veljon tulos läpäisee validate-midi
+- test_ui_kick_density_skip_keeps_prompt_value — "(skip)" säilyttää promptin arvon
+- test_ui_help_mentions_guided_mode --help mainitsee ohjatun tilan
+
+Manuaalinen smoke:
+
+```bash
+drumgen ui
+# vastaa kysymyksiin → "Done! wrote drums.mid ... valid for REAPER"
+drumgen validate-midi drums.mid
+```
+
 # CLI Testit (3 testia)
 tests/test_cli_smoke.py::test_help_exits_zero PASSED
 tests/test_cli_smoke.py::test_help_lists_all_expected_subcommands PASSED

@@ -44,6 +44,9 @@ source .venv/bin/activate
 pip install -U pip
 pip install -e ".[dev]"
 
+# Easiest way: guided mode — answer simple questions, get a drum MIDI file
+drumgen ui
+
 # Baseline: generate a simple REAPER-ready drum MIDI without any audio or prompt
 drumgen make-empty --bars 32 --bpm 120 --out drums.mid
 
@@ -57,6 +60,17 @@ drumgen generate --stylespec spec.json --out punk_drums.mid
 # Or in one step
 drumgen generate --prompt "funk 105 bpm, ghost notes, shuffle hats" --out funk_drums.mid
 ```
+
+### Guided mode (`drumgen ui`)
+
+The easiest way to use BeatForge. The wizard asks simple questions and writes the file:
+
+1. Describe the drums in your own words (or skip and pick from menus)
+2. How many bars, what tempo (or skip), output filename
+3. Fine-tune via numbered menus: genre, hi-hats, snare placement, kick density, fills, feel, ghost notes — press Enter to accept defaults, `(skip)` keeps what your prompt said
+4. Confirm the summary → the wizard writes the MIDI and validates it automatically
+
+No CLI flags needed; every answer has a sensible default so you can just press Enter.
 
 Import the resulting `.mid` into REAPER: GM drum map, channel 10, tempo and 4/4 time-signature meta events are already embedded. Map your drum sampler to channel 10 and edit freely.
 
