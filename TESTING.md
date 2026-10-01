@@ -37,7 +37,7 @@ BeatForge on **pre-alpha** vaiheessa. Tama tiedosto kertoo miten testata kaikkea
 # 1. Kopioi raita testauskansioon
 cp /polku/omaan/raitaan/basso.wav testruns/
 
-# 2. Analysoi, generoi ja validoij — kaikki tulokset testruns/:
+# 2. Analysoi, generoi ja validoi — kaikki tulokset testruns/:
 drumgen analyze  --audio testruns/basso.wav --out testruns/analysis.json
 drumgen generate --audio testruns/basso.wav --prompt "punk 180bpm" --seed 42 --out testruns/drums.mid
 drumgen validate-midi testruns/drums.mid
