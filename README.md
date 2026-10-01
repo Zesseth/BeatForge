@@ -61,6 +61,17 @@ drumgen generate --stylespec spec.json --out punk_drums.mid
 drumgen generate --prompt "funk 105 bpm, ghost notes, shuffle hats" --out funk_drums.mid
 ```
 
+### Guided mode (`drumgen ui`)
+
+The easiest way to use BeatForge. The wizard asks simple questions and writes the file:
+
+1. Describe the drums in your own words (or skip and pick from menus)
+2. How many bars, what tempo (or skip), output filename
+3. Fine-tune via numbered menus: genre, hi-hats, snare placement, kick density, fills, feel, ghost notes — press Enter to accept defaults, `(skip)` keeps what your prompt said
+4. Confirm the summary → the wizard writes the MIDI and validates it automatically
+
+No CLI flags needed; every answer has a sensible default so you can just press Enter.
+
 Import the resulting `.mid` into REAPER: GM drum map, channel 10, tempo and 4/4 time-signature meta events are already embedded. Map your drum sampler to channel 10 and edit freely.
 
 The remaining CLI surface (`analyze`, `groove`, `edit`, `models install`, `generate-ml`, …) is implemented incrementally in milestones M2–M5; the stub subcommands print a notice and exit 0 until their milestone lands. See [`TESTING.md`](TESTING.md) for the manual test plan and [`docs/STYLESPEC.md`](docs/STYLESPEC.md) for the prompt schema.
