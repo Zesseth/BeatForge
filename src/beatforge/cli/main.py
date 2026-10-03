@@ -210,8 +210,18 @@ def generate(
         if cache_dir is not None:
             cache_dir.mkdir(parents=True, exist_ok=True)
             stem = audio.stem
+            analysis_projection = Analysis(
+                schema_version=groove_result.schema_version,
+                source=groove_result.source,
+                tempo_bpm=groove_result.tempo_bpm,
+                tempo_confidence=groove_result.tempo_confidence,
+                time_signature=groove_result.time_signature,
+                beats_s=groove_result.beats_s,
+                downbeats_s=groove_result.downbeats_s,
+                bars=groove_result.bars,
+            )
             (cache_dir / f"{stem}.analysis.json").write_text(
-                analysis_to_json(groove_result), encoding="utf-8"
+                analysis_to_json(analysis_projection), encoding="utf-8"
             )
             (cache_dir / f"{stem}.groove.json").write_text(
                 groove_to_json(groove_result), encoding="utf-8"
@@ -223,6 +233,8 @@ def generate(
         analysed = load_groove(groove_path)
 
     analysed = _coerce_analysis(analysed)
+    if tempo_mode not in ("follow", "fixed"):
+        raise typer.BadParameter(f"unknown --tempo-mode {tempo_mode!r}; use 'follow' or 'fixed'")
     if tempo_mode == "fixed":
         effective_bpm = bpm if bpm is not None else (spec.bpm if spec.bpm is not None else 120)
     else:

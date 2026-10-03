@@ -42,6 +42,6 @@ drumgen analyze --audio song.wav --time-signature 4/4 --out analysis.json
 
 - Supports `.wav` and `.flac` (via `soundfile`).
 - `--bpm-override` skips tempo estimation and derives an even beat grid.
-- Output is deterministic for the same input file and pinned library versions (librosa/numpy are pinned exactly in `pyproject.toml`).
+- Output is deterministic for the same input file and pinned library versions (librosa is pinned exactly in `pyproject.toml`; numpy is constrained to `>=1.26,<2.3`).
 - Validated by a pydantic model (`beatforge.audio.analyze.Analysis`); unknown keys are rejected.
 - Network policy: `none`. No HTTP client is imported anywhere in `beatforge.audio`.

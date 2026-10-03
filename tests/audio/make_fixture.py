@@ -22,7 +22,7 @@ FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
 def synth_click_track(
     bpm: float,
-    duration_s: float = 8.0,
+    duration_s: float = 2.0,
     sr: int = 22050,
     accent_every: int = 4,
 ) -> np.ndarray:
@@ -45,7 +45,7 @@ def synth_click_track(
 
 
 def synth_sine_bass(
-    bpm: float, duration_s: float = 8.0, sr: int = 22050, freq: float = 82.0
+    bpm: float, duration_s: float = 2.0, sr: int = 22050, freq: float = 82.0
 ) -> np.ndarray:
     """Sine 'bass' plucked on every beat — a non-click tempo case."""
     n = int(duration_s * sr)

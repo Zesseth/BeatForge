@@ -21,6 +21,10 @@ FIXTURE_PARAMS = [
     ("sinebass_120bpm.wav", 120.0),
 ]
 
+# Fixture audio is kept short (issue #27: <= 2 s) for fast tempo tests;
+# tests that need full analysed bars pass an explicit longer duration.
+FIXTURE_DURATION_S = 8.0
+
 
 @pytest.fixture(scope="session")
 def fixture_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
@@ -28,7 +32,11 @@ def fixture_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
     d = tmp_path_factory.mktemp("audio_fixtures")
     for name, bpm in FIXTURE_PARAMS:
-        y = synth_click_track(bpm) if name.startswith("click") else synth_sine_bass(bpm)
+        y = (
+            synth_click_track(bpm, duration_s=FIXTURE_DURATION_S)
+            if name.startswith("click")
+            else synth_sine_bass(bpm, duration_s=FIXTURE_DURATION_S)
+        )
         sf.write(str(d / name), y, 22050, subtype="PCM_16")
     return d
 

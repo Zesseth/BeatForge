@@ -65,13 +65,16 @@ def test_midi_length_within_one_bar(click_wav: Path, tmp_path: Path) -> None:
 
 def test_notes_on_grid_positions(click_wav: Path) -> None:
     analysis = analyze_audio(click_wav)
-    spec = StyleSpec(genre="rock", hats="8th")
+    spec = StyleSpec(genre="rock", hats="8th", fills="none")
     events = generate_aligned_events(analysis, spec, seed=42, ppq=480)
 
     subdivisions = 2
     slot_ticks = 480 // subdivisions
+    first_downbeat = min(ev.start_tick for ev in events)
     for ev in events:
-        assert ev.start_tick % slot_ticks == 0, f"tick {ev.start_tick} off 8th grid"
+        assert (ev.start_tick - first_downbeat) % slot_ticks == 0, (
+            f"tick {ev.start_tick} off 8th grid"
+        )
 
 
 def test_output_passes_validator(click_wav: Path, tmp_path: Path) -> None:
@@ -199,3 +202,131 @@ def runner_invoke_analyze(click_wav: Path, out: Path):
     from beatforge.cli.main import app
 
     return CliRunner().invoke(app, ["analyze", "--audio", str(click_wav), "--out", str(out)])
+
+
+def _synthetic_analysis(
+    bars: int = 2, bpm: float = 120.0, first_beat_s: float = 0.0, time_signature: str = "4/4"
+):
+    from beatforge.audio.analyze import Analysis, Bar, SourceInfo
+
+    beat_period = 60.0 / bpm
+    ts_num = int(time_signature.split("/")[0])
+    beats_per_bar = ts_num
+    beats = [round(first_beat_s + i * beat_period, 6) for i in range(bars * beats_per_bar + 1)]
+    bar_objs = [
+        Bar(index=i, start_s=beats[i * beats_per_bar], end_s=beats[(i + 1) * beats_per_bar])
+        for i in range(bars)
+    ]
+    return Analysis(
+        schema_version="1.0",
+        source=SourceInfo(sha256="0" * 64, duration_s=30.0, sr=22050),
+        tempo_bpm=bpm,
+        tempo_confidence=1.0,
+        time_signature=time_signature,
+        beats_s=beats,
+        downbeats_s=beats[::beats_per_bar],
+        bars=bar_objs,
+    )
+
+
+def test_no_complete_bars_rejected() -> None:
+    analysis = _synthetic_analysis(bars=0)
+    with pytest.raises(ValueError, match="no complete bar"):
+        generate_aligned_events(analysis, StyleSpec(genre="rock"))
+
+
+def test_non_quarter_denominator_rejected() -> None:
+    analysis = _synthetic_analysis(bars=2, time_signature="6/8")
+    with pytest.raises(ValueError, match="/4 denominators only"):
+        generate_aligned_events(analysis, StyleSpec(genre="rock"))
+
+
+def test_events_follow_analysed_downbeat_offset() -> None:
+    offset_s = 0.512
+    analysis = _synthetic_analysis(bars=2, first_beat_s=offset_s)
+    events = generate_aligned_events(analysis, StyleSpec(genre="rock"), seed=1, ppq=480)
+    ticks_per_second = 120.0 / 60.0 * 480
+    expected_first = round(offset_s * ticks_per_second)
+    assert min(ev.start_tick for ev in events) == expected_first
+
+
+def test_fills_policies_differ() -> None:
+    analysis = _synthetic_analysis(bars=4)
+    specs = {
+        mode: StyleSpec(genre="rock", fills=mode)  # type: ignore[arg-type]
+        for mode in ("none", "fewer", "default", "before_chorus")
+    }
+    crash_sets = {
+        mode: {ev.start_tick for ev in generate_aligned_events(analysis, s, seed=1)}
+        for mode, s in specs.items()
+    }
+    assert crash_sets["none"] != crash_sets["fewer"]
+    assert crash_sets["fewer"] != crash_sets["default"]
+
+
+def test_fill_stays_within_final_bar() -> None:
+    analysis = _synthetic_analysis(bars=2)
+    for hats in ("8th", "shuffle", "16th"):
+        spec = StyleSpec(genre="rock", hats=hats, fills="fewer")
+        events = generate_aligned_events(analysis, spec, seed=1, ppq=480)
+        bar_ticks = 4 * 480
+        assert max(ev.start_tick for ev in events) < bar_ticks * 2
+
+
+def test_cli_rejects_unknown_tempo_mode(click_wav: Path, tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from beatforge.cli.main import app
+
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            "--audio",
+            str(click_wav),
+            "--prompt",
+            "rock",
+            "--tempo-mode",
+            "fiexed",
+            "--seed",
+            "42",
+            "--out",
+            str(tmp_path / "drums.mid"),
+        ],
+    )
+    assert result.exit_code != 0
+    assert "tempo-mode" in result.output
+
+
+def test_cli_cache_analysis_is_valid_analysis(click_wav: Path, tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from beatforge.cli.main import app
+    from beatforge.gen.aligned import load_analysis
+
+    cache_dir = tmp_path / "cache"
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            "--audio",
+            str(click_wav),
+            "--prompt",
+            "rock",
+            "--cache-dir",
+            str(cache_dir),
+            "--seed",
+            "42",
+            "--out",
+            str(tmp_path / "drums.mid"),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    cached = cache_dir / f"{click_wav.stem}.analysis.json"
+    assert cached.exists()
+    payload = json.loads(cached.read_text(encoding="utf-8"))
+    assert "onsets_s" not in payload
+    loaded = load_analysis(cached)
+    assert loaded.tempo_bpm > 0

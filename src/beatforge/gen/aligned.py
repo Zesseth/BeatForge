@@ -93,6 +93,29 @@ def _chorus_bars(analysis: Analysis) -> set[int]:
     return {bar for h in hints if h.label == "chorus" for bar in range(h.bar_start, h.bar_end + 1)}
 
 
+def _fill_bar_indices(spec: StyleSpec, total_bars: int, chorus_bars: set[int]) -> set[int]:
+    """Fill-bar selection honouring every StyleSpec.fills intent.
+
+    ``before_chorus``: last bar of each verse immediately preceding a
+    chorus section hint (mirrors the styled generator's section logic).
+    ``more``/``default``: every other bar. ``fewer``: the final bar only.
+    "none``: never.
+    """
+    if spec.fills == "none":
+        return set()
+    if spec.fills == "fewer":
+        return {total_bars - 1}
+    if spec.fills == "before_chorus":
+        fill_bars: set[int] = set()
+        if not chorus_bars:
+            return {total_bars - 1}
+        for bar in range(total_bars - 1):
+            if bar not in chorus_bars and (bar + 1) in chorus_bars:
+                fill_bars.add(bar)
+        return fill_bars or {total_bars - 1}
+    return {bar for bar in range(0, total_bars, 2)}
+
+
 def generate_aligned_events(
     analysis: Analysis,
     spec: StyleSpec,
@@ -103,29 +126,46 @@ def generate_aligned_events(
 ) -> list[DrumEvent]:
     """Generate drum events aligned to the analysed beat grid.
 
-    Events are laid on an even grid derived from the analysis tempo so the
-    MIDI beats line up with the audio; the analysed bar count bounds the
+    Events are laid on the analysed beat timestamps (mapped to MIDI ticks
+    via the fixed tempo) so the MIDI lines up with the audio, including
+    the audio's initial downbeat offset; the analysed bar count bounds the
     output length (rounded down to whole bars).
+
+    Raises ``ValueError`` when the analysis contains no complete bar.
     """
     rng = random.Random(seed)
-    beats_per_bar, _den = _parse_time_signature(analysis.time_signature)
+    beats_per_bar, denominator = _parse_time_signature(analysis.time_signature)
     subdivisions = _hats_subdivision(spec)
     kick_slots = _kick_slots(spec, beats_per_bar, subdivisions)
     snare_slots = _snare_slots(spec, beats_per_bar, subdivisions)
 
     total_bars = len(analysis.bars) if max_bars is None else min(max_bars, len(analysis.bars))
     if total_bars <= 0:
-        return []
+        raise ValueError("analysis contains no complete bar; nothing to align against")
 
-    slots_per_bar = beats_per_bar * subdivisions
-    slot_ticks = ppq // subdivisions
+    if denominator != 4:
+        raise ValueError(
+            f"unsupported time signature {analysis.time_signature!r}: "
+            "audio-aligned generation currently supports /4 denominators only"
+        )
+    beat_ticks = ppq
+    beats_per_bar_eff = beats_per_bar
+
+    slots_per_bar = beats_per_bar_eff * subdivisions
+    slot_ticks = beat_ticks // subdivisions
+    if slot_ticks < 1:
+        raise ValueError(f"subdivision does not fit ppq={ppq}")
     bar_ticks = slots_per_bar * slot_ticks
     chorus_bars = _chorus_bars(analysis)
-    fill_bars: set[int] = set() if spec.fills == "none" else {total_bars - 1}
+    fill_bars = _fill_bar_indices(spec, total_bars, chorus_bars)
+
+    ticks_per_second = analysis.tempo_bpm / 60.0 * ppq
+    first_beat_s = analysis.beats_s[0] if analysis.beats_s else analysis.bars[0].start_s
+    grid_origin = int(round(first_beat_s * ticks_per_second))
 
     events: list[DrumEvent] = []
     for bar in range(total_bars):
-        bar_origin = bar * bar_ticks
+        bar_origin = grid_origin + bar * bar_ticks
         is_chorus = bar in chorus_bars
         is_fill = bar in fill_bars
 
@@ -145,8 +185,8 @@ def generate_aligned_events(
             events.append(DrumEvent(bar_origin, GM_RIDE, velocity=90))
 
         if is_fill:
-            fill_step = ppq // max(1, subdivisions // 2) or ppq
-            fill_origin = bar_origin + (beats_per_bar - 1) * ppq
+            fill_step = beat_ticks // 4
+            fill_origin = bar_origin + (beats_per_bar_eff - 1) * beat_ticks
             events.append(DrumEvent(fill_origin, GM_CRASH, velocity=110))
             for i, drum in enumerate((GM_TOM_HI, GM_TOM_MID, GM_TOM_LO, GM_TOM_LO)):
                 events.append(DrumEvent(fill_origin + i * fill_step, drum, velocity=100))
