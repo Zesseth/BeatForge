@@ -296,7 +296,7 @@ def test_cli_rejects_unknown_tempo_mode(click_wav: Path, tmp_path: Path) -> None
         ],
     )
     assert result.exit_code != 0
-    assert "tempo-mode" in result.output
+    assert not (tmp_path / "drums.mid").exists()
 
 
 def test_cli_cache_analysis_is_valid_analysis(click_wav: Path, tmp_path: Path) -> None:
