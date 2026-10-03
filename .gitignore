@@ -223,3 +223,9 @@ __marimo__/
 stylespec.json
 !tests/fixtures/**/stylespec.json
 
+
+# Audio fixtures are synthesised at test time — never commit audio (AGENTS.md §5)
+tests/audio/fixtures/
+
+# Local testing workspace: user audio + CLI outputs (never commit, privacy)
+/testruns/

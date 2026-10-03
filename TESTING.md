@@ -2,7 +2,7 @@
 
 > **Testausohjeet projektin kehittajille ja testereille**
 > 
-> *Paeivitetty: 2026-06-23* | *Versio: 0.1.0* | *Status: M0+M1 Complete*
+> *Paeivitetty: 2026-10-01* | *Versio: 0.2.0* | *Status: M0+M1 merged, M2 testauksessa (PR #50)*
 
 ---
 
@@ -16,11 +16,32 @@ BeatForge on **pre-alpha** vaiheessa. Tama tiedosto kertoo miten testata kaikkea
 |-----------|--------|--------|----------|
 | **M0** (Foundation) | ✅ **Valmis** | 5+ testia | `make-empty`, `validate-midi` |
 | **M1** (Rules-based) | ✅ **Valmis** | 40+ testia | `generate-basic`, `parse-prompt`, `generate` |
-| **M2** (Audio) | 🔲 Stubit | 0 testia | `analyze`, `groove` (ei toiminnallisuutta) |
+| **M2** (Audio) | Testauksessa (PR #50) | 30+ testia | `analyze`, `groove`, `generate --audio` |
 | **M3** (Editing) | 🔲 Stubit | 0 testia | `edit` (ei toiminnallisuutta) |
 | **M4** (ML) | 🔲 Stubit | 0 testia | `generate-ml`, `models` (ei toiminnallisuutta) |
 
-**Kaikki 58 testia lapaisevat** ✅
+**Kaikki 90 testia lapaisevat** ✅ (M0+M1+M2, PR #50)
+
+---
+
+## 📂 Testauskansio: `testruns/` (pakollinen omilla raidoilla)
+
+**Kaikki manuaalinen testaus omilla audio-tiedostoilla tehdaan AINA `testruns/`-kansion alle** — ei mihinkaan muualle repoon.
+
+- Kansio on `.gitignore`-ohituksessa (`/testruns/`): omat raidat, analyysit ja MIDI-tulokset eivat voi vahingossakaan paatya committiin.
+- Tama on privacy-vaatimus (PRIVACY.md: kayttajan audio ei jaa koneelta; AGENTS.md §5: audioa ei commitoida).
+- Myos CLI-tulostiedostot (`analysis.json`, `groove.json`, `*.mid`) kirjoitetaan sinne — repojuuri pysyy puhtaana.
+- Testitietostot (syntetisoidut fixturet) ovat eri asia: ne hoituu `tests/audio/fixtures/`-ohituksella ja `tests/audio/make_fixture.py`-tyokalulla.
+
+```bash
+# 1. Kopioi raita testauskansioon
+cp /polku/omaan/raitaan/basso.wav testruns/
+
+# 2. Analysoi, generoi ja validoi — kaikki tulokset testruns/:
+drumgen analyze  --audio testruns/basso.wav --out testruns/analysis.json
+drumgen generate --audio testruns/basso.wav --prompt "punk 180bpm" --seed 42 --out testruns/drums.mid
+drumgen validate-midi testruns/drums.mid
+```
 
 ---
 
@@ -64,7 +85,7 @@ pip install -e ".[dev]"
 
 #### Kaikki testit
 ```bash
-# Aja kaikki 58 testia
+# Aja kaikki 90 testia
 python -m pytest -v
 
 # Lyhyempi tulostus
@@ -228,6 +249,30 @@ drumgen generate --stylespec spec.json --bars 64 --out from_spec.mid
 # BPM override
 drumgen generate --prompt "rock 120bpm" --bpm 140 --bars 32 --out override_bpm.mid
 ```
+
+#### 5. Audio-kohdistettu testaus (M2, PR #50)
+
+Kaikki omat raidat ja tulokset `testruns/`-kansioon (ks. ylhaalta).
+
+```bash
+# Tempo + tahdirutima paikallisesta audiosta
+drumgen analyze --audio testruns/basso.wav --out testruns/analysis.json
+
+# Onset-aikaleimat + osio-vihjeet (groove.json)
+drumgen groove --audio testruns/basso.wav --out testruns/groove.json
+
+# Audio-kohdistettu generointi: tempo seuraa analyysia, nuotit kvantisoituvat tahdiruudukkoon
+drumgen generate --audio testruns/basso.wav --prompt "punk 180bpm" --seed 42 --out testruns/drums.mid
+
+# Validointi
+drumgen validate-midi testruns/drums.mid
+```
+
+**M2-varmistukset:**
+1. **Tempo:** `analysis.json`-arvo +-2% raidan todellisesta BPM:sta (DoD-sieto).
+2. **Pituus:** generoitu MIDI paattyy koko tahtiin (viimeista osittaista tahtia ei generoida).
+3. **Determinismi:** sama `--seed` + sama raita tuottaa identtisen `.mid`-tiedoston (`cmp a.mid b.mid`).
+4. **Privacy:** `groove.json` sisaltaa vain aikaleimoja ja tiheyksia — ei amplitudeja, spektreja tai MFCC:ita.
 
 ### Musiikilliset Varmistukset
 
@@ -420,7 +465,7 @@ python -m pytest --cov=src --cov-report=html
 
 ### Yleiset Kysymykset
 - **Q: Mitka komennot ovat valmiita?**
-  - A: `make-empty`, `validate-midi`, `generate-basic`, `parse-prompt`, `generate`
+  - A: `make-empty`, `validate-midi`, `generate-basic`, `parse-prompt`, `generate`; M2:ssa (PR #50) lisaksi `analyze`, `groove` ja `generate --audio`
 
 - **Q: Mitka tyylit ovat tuettuja?**
   - A: `rock`, `pop`, `punk`, `funk`, `metal`
@@ -464,6 +509,7 @@ for ev in events[:20]:
 | Versio | Paivamaara | Muutokset |
 |--------|------------|-----------|
 | 0.1.0 | 2026-06-23 | Ensimmainen testausohje, M0+M1 valmiina |
+| 0.2.0 | 2026-10-01 | M2-testausohjeet (PR #50), testruns/-saanto omille raidoille, testimaarat paivitetty (90) |
 
 ---
 
